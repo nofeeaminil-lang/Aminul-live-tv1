@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title id="siteTitle">Live TV · User Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: #0b0e14;
+      color: #f0f4fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    .tv-container {
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #2a313c;
+      padding-bottom: 0.75rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+    }
+
+    .logo-img {
+      height: 45px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #1e2632;
+      padding: 4px 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: 0.2s;
+    }
+
+    .logo-img:hover {
+      filter: brightness(1.1);
+      transform: scale(1.01);
+    }
+
+    .brand-text {
+      font-weight: 600;
+      font-size: 1.3rem;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #b7d0ff, #8ab0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.8rem;
+      color: #7f96b5;
+    }
+
+    .header-stats span i {
+      margin-right: 0.3rem;
+      color: #5f8eff;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+    }
+
+    .channel-sidebar {
+      background: #141c26;
+      border-radius: 20px;
+      padding: 1rem;
+      border: 1px solid #28323f;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .channel-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .channel-sidebar::-webkit-scrollbar-track {
+      background: #0b0e14;
+      border-radius: 10px;
+    }
+
+    .channel-sidebar::-webkit-scrollbar-thumb {
+      background: #2f6bcb;
+      border-radius: 10px;
+    }
+
+    .channel-sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #1f2b38;
+    }
+
+    .channel-sidebar-header h3 {
+      font-size: 0.9rem;
+      color: #b0c6e0;
+      font-weight: 500;
+    }
+
+    .channel-sidebar-header .channel-count {
+      background: #1a2b3d;
+      padding: 0.1rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      color: #7f96b5;
+    }
+
+    .channel-search {
+      width: 100%;
+      padding: 0.4rem 0.8rem;
+      border-radius: 30px;
+      border: 1px solid #2a3f57;
+      background: #0e1722;
+      color: #f0f6ff;
+      font-size: 0.8rem;
+      outline: none;
+      margin-bottom: 0.8rem;
+      transition: 0.2s;
+    }
+
+    .channel-search:focus {
+      border-color: #5f8eff;
+      box-shadow: 0 0 0 2px rgba(70, 130, 255, 0.2);
+    }
+
+    .channel-search::placeholder {
+      color: #4a5f7a;
+    }
+
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.85rem;
+      color: #b0c6e0;
+    }
+
+    .channel-item:hover {
+      background: #1a2b3d;
+    }
+
+    .channel-item.active {
+      background: #1a2b3d;
+      border-left: 3px solid #5f8eff;
+      color: #fff;
+    }
+
+    .channel-item .channel-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #1e2632;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #5f8eff;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .channel-item .channel-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .channel-item .channel-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-item .channel-live {
+      font-size: 0.6rem;
+      color: #4cd964;
+      display: none;
+    }
+
+    .channel-item.active .channel-live {
+      display: block;
+    }
+
+    .channel-item .channel-number {
+      font-size: 0.6rem;
+      color: #4a5f7a;
+      margin-right: 0.3rem;
+      min-width: 20px;
+    }
+
+    .player-area {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .player-card {
+      background: #141c26;
+      border-radius: 20px;
+      padding: 1rem;
+      border: 1px solid #28323f;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .player-wrapper {
+      position: relative;
+      width: 100%;
+      background: #0a0f16;
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #videoPlayer {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #0a0f16;
+      outline: none;
+      border: none;
+    }
+
+    .video-watermark {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      opacity: 0.85;
+    }
+
+    .video-watermark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .video-watermark .watermark-text-overlay {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      white-space: nowrap;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    .video-watermark.show-text .watermark-text-overlay {
+      display: block;
+    }
+
+    .video-watermark.position-top-left {
+      top: 20px;
+      left: 20px;
+      bottom: auto;
+      right: auto;
+    }
+
+    .video-watermark.position-top-right {
+      top: 20px;
+      right: 20px;
+      bottom: auto;
+      left: auto;
+    }
+
+    .video-watermark.position-bottom-left {
+      bottom: 20px;
+      left: 20px;
+      top: auto;
+      right: auto;
+    }
+
+    .video-watermark.position-bottom-right {
+      bottom: 20px;
+      right: 20px;
+      top: auto;
+      left: auto;
+    }
+
+    .video-watermark.position-center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      bottom: auto;
+      right: auto;
+    }
+
+    .video-watermark.size-small {
+      width: 60px;
+      height: 60px;
+    }
+
+    .video-watermark.size-medium {
+      width: 100px;
+      height: 100px;
+    }
+
+    .video-watermark.size-large {
+      width: 150px;
+      height: 150px;
+    }
+
+    .video-watermark.size-xlarge {
+      width: 200px;
+      height: 200px;
+    }
+
+    .watermark-hidden {
+      display: none !important;
+    }
+
+    .video-watermark.animate-pulse {
+      animation: watermarkPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes watermarkPulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    .player-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.6rem;
+      gap: 0.5rem;
+    }
+
+    .stream-info {
+      background: #1e2836;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      color: #b0c6e0;
+      border: 1px solid #2f3d4f;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stream-info i {
+      color: #70b0ff;
+    }
+
+    .status-badge {
+      font-size: 0.65rem;
+      background: #1a2b3d;
+      padding: 0.1rem 0.7rem;
+      border-radius: 40px;
+      border: 1px solid #38516b;
+      color: #b4ceff;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #25303e;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      color: #e8edf5;
+      font-weight: 500;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: 0.15s;
+      border: 1px solid #35475b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn i {
+      color: #8bb4ff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #45607c;
+    }
+    .btn-outline:hover {
+      background: #1f2d3f;
+    }
+
+    .btn-sm {
+      padding: 0.2rem 0.6rem;
+      font-size: 0.65rem;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      color: #5b6f89;
+      text-align: center;
+      border-top: 1px solid #1f2b38;
+      padding-top: 1.5rem;
+      width: 100%;
+    }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(11, 14, 20, 0.9);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #1e2632;
+      border-top: 4px solid #5f8eff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 820px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .channel-sidebar {
+        max-height: 300px;
+        order: 2;
+      }
+      .player-area {
+        order: 1;
+      }
+      .header {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .header-stats {
+        font-size: 0.7rem;
+        gap: 0.8rem;
+      }
+      .brand-text {
+        font-size: 1.1rem;
+      }
+      .logo-img {
+        height: 38px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .tv-container {
+        padding: 0;
+      }
+      .channel-sidebar {
+        max-height: 250px;
+        padding: 0.7rem;
+      }
+      .channel-item {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+      }
+      .channel-item .channel-logo {
+        width: 26px;
+        height: 26px;
+      }
+      .player-card {
+        padding: 0.5rem;
+      }
+      .video-watermark.size-small {
+        width: 40px;
+        height: 40px;
+      }
+      .video-watermark.size-medium {
+        width: 70px;
+        height: 70px;
+      }
+      .video-watermark.size-large {
+        width: 100px;
+        height: 100px;
+      }
+      .video-watermark.size-xlarge {
+        width: 140px;
+        height: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="color: #b4ceff;">Loading channels...</div>
+  </div>
+
+  <div class="tv-container">
+    <div class="header">
+      <div class="logo-area" id="logoArea">
+        <img id="siteLogo" src="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Live TV Logo" class="logo-img" onerror="this.style.display='none'" />
+        <span class="brand-text" id="siteName">LiveTV</span>
+      </div>
+      <div class="header-stats">
+        <span><i class="fas fa-tv"></i> <span id="totalChannels">0</span> Channels</span>
+        <span><i class="fas fa-play-circle"></i> <span id="activeChannel">None</span></span>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="channel-sidebar">
+        <div class="channel-sidebar-header">
+          <h3><i class="fas fa-list-ul"></i> Channels</h3>
+          <span class="channel-count" id="channelCount">0</span>
+        </div>
+        <input type="text" class="channel-search" id="channelSearch" placeholder="🔍 Search channels..." />
+        <div class="channel-list" id="channelList"></div>
+      </div>
+
+      <div class="player-area">
+        <div class="player-card">
+          <div class="player-wrapper" id="playerWrapper">
+            <video id="videoPlayer" controls autoplay playsinline></video>
+            <div class="video-watermark position-bottom-right size-medium animate-pulse" id="videoWatermark">
+              <img id="watermarkImage" src="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Watermark" onerror="this.style.display='none'" />
+              <span class="watermark-text-overlay" id="watermarkTextOverlay">LIVE</span>
+            </div>
+          </div>
+          <div class="player-controls">
+            <div class="stream-info">
+              <i class="fas fa-broadcast-tower"></i>
+              <span id="currentStreamLabel">Loading...</span>
+              <span class="status-badge" id="streamStatus"><i class="fas fa-circle" style="color:#ffaa00; font-size:0.5rem;"></i> connecting</span>
+            </div>
+            <div class="action-buttons">
+              <button class="btn btn-outline btn-sm" id="reloadPlayerBtn"><i class="fas fa-sync-alt"></i> Reload</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer" id="footerText">
+      <i class="fas fa-tv"></i> Live TV · Supports M3U8 & .TS
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDR7kP1HaLBE6EYB6We0C5I27A04XsgzjA",
+      authDomain: "a-m-tv.firebaseapp.com",
+      databaseURL: "https://a-m-tv-default-rtdb.firebaseio.com",
+      projectId: "a-m-tv",
+      storageBucket: "a-m-tv.firebasestorage.app",
+      messagingSenderId: "538650039061",
+      appId: "1:538650039061:web:d0ed1b4cb3412eaa93cf1c",
+      measurementId: "G-PDK3BRJE85"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    (function() {
+      const video = document.getElementById('videoPlayer');
+      const currentStreamLabel = document.getElementById('currentStreamLabel');
+      const streamStatus = document.getElementById('streamStatus');
+      const reloadBtn = document.getElementById('reloadPlayerBtn');
+      const siteLogo = document.getElementById('siteLogo');
+      const siteName = document.getElementById('siteName');
+      const siteTitle = document.getElementById('siteTitle');
+      const footerText = document.getElementById('footerText');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const logoArea = document.getElementById('logoArea');
+      const channelList = document.getElementById('channelList');
+      const channelSearch = document.getElementById('channelSearch');
+      const totalChannels = document.getElementById('totalChannels');
+      const channelCount = document.getElementById('channelCount');
+      const activeChannel = document.getElementById('activeChannel');
+
+      const watermark = document.getElementById('videoWatermark');
+      const watermarkImage = document.getElementById('watermarkImage');
+      const watermarkTextOverlay = document.getElementById('watermarkTextOverlay');
+
+      const defaultChannels = [
+        { id: 1, name: 'CCTV 5', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'CCTV 5', logo: 'https://img.icons8.com/color/48/000000/cctv.png' },
+        { id: 2, name: 'BTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'BTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
+        { id: 3, name: 'Sangsad TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Sangsad TV', logo: 'https://img.icons8.com/color/48/000000/parliament.png' },
+        { id: 4, name: 'Ekattor TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekattor TV', logo: 'https://img.icons8.com/color/48/000000/news.png' },
+        { id: 5, name: 'Channel 1', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 1', logo: 'https://img.icons8.com/color/48/000000/tv-show.png' },
+        { id: 6, name: 'Shomoy TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Shomoy TV', logo: 'https://img.icons8.com/color/48/000000/clock.png' },
+        { id: 7, name: 'Jamuna TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Jamuna TV', logo: 'https://img.icons8.com/color/48/000000/river.png' },
+        { id: 8, name: 'DBC News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'DBC News', logo: 'https://img.icons8.com/color/48/000000/newspaper.png' },
+        { id: 9, name: 'Channel 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 24', logo: 'https://img.icons8.com/color/48/000000/24-hours.png' },
+        { id: 10, name: 'ATN News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ATN News', logo: 'https://img.icons8.com/color/48/000000/breaking-news.png' },
+        { id: 11, name: 'News 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'News 24', logo: 'https://img.icons8.com/color/48/000000/live-news.png' },
+        { id: 12, name: 'Independent TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Independent TV', logo: 'https://img.icons8.com/color/48/000000/independent.png' },
+        { id: 13, name: 'NTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'NTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
+        { id: 14, name: 'Ekushey TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekushey TV', logo: 'https://img.icons8.com/color/48/000000/21.png' },
+        { id: 15, name: 'Channel I HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel I HD', logo: 'https://img.icons8.com/color/48/000000/hd-ready.png' },
+        { id: 16, name: 'Football HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Football HD', logo: 'https://img.icons8.com/color/48/000000/football2.png' },
+        { id: 17, name: 'PRO Sports', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'PRO Sports', logo: 'https://img.icons8.com/color/48/000000/sports.png' },
+        { id: 18, name: 'Alwan TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Alwan TV', logo: 'https://img.icons8.com/color/48/000000/rainbow.png' },
+        { id: 19, name: 'Vim IPTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Vim IPTV', logo: 'https://img.icons8.com/color/48/000000/iptv.png' },
+        { id: 20, name: 'ShareExt', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ShareExt', logo: 'https://img.icons8.com/color/48/000000/share.png' }
+      ];
+
+      let channels = [];
+      let filteredChannels = [];
+      let activeChannelIndex = 0;
+      let currentStreamUrl = '';
+      let currentLabel = '';
+
+      let watermarkSettings = {
+        image: 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png',
+        position: 'bottom-right',
+        size: 'medium',
+        opacity: 0.85,
+        enabled: true,
+        text: 'LIVE',
+        showText: false,
+        animation: true
+      };
+
+      function applyWatermark(settings) {
+        if (!settings) return;
+        if (settings.image && settings.image !== '') {
+          watermarkImage.src = settings.image;
+          watermarkImage.style.display = 'block';
+        } else {
+          watermarkImage.style.display = 'none';
+        }
+        if (settings.position) {
+          watermark.className = 'video-watermark';
+          watermark.classList.add(`position-${settings.position}`);
+        }
+        if (settings.size) {
+          watermark.classList.remove('size-small', 'size-medium', 'size-large', 'size-xlarge');
+          watermark.classList.add(`size-${settings.size}`);
+        }
+        if (settings.opacity !== undefined) {
+          watermark.style.opacity = settings.opacity;
+        }
+        if (settings.enabled === false) {
+          watermark.classList.add('watermark-hidden');
+        } else {
+          watermark.classList.remove('watermark-hidden');
+        }
+        if (settings.text) {
+          watermarkTextOverlay.textContent = settings.text;
+        }
+        if (settings.showText) {
+          watermark.classList.add('show-text');
+        } else {
+          watermark.classList.remove('show-text');
+        }
+        if (settings.animation) {
+          watermark.classList.add('animate-pulse');
+        } else {
+          watermark.classList.remove('animate-pulse');
+        }
+      }
+
+      function loadWatermarkFromFirebase() {
+        const watermarkRef = database.ref('watermark');
+        watermarkRef.once('value').then((snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            watermarkSettings = { ...watermarkSettings, ...data };
+            applyWatermark(watermarkSettings);
+          } else {
+            applyWatermark(watermarkSettings);
+          }
+        }).catch(() => applyWatermark(watermarkSettings));
+      }
+
+      const watermarkRef = database.ref('watermark');
+      watermarkRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          watermarkSettings = { ...watermarkSettings, ...data };
+          applyWatermark(watermarkSettings);
+        }
+      });
+
+      function renderChannels(channelsToRender) {
+        channelList.innerHTML = '';
+        if (!channelsToRender || channelsToRender.length === 0) {
+          channelList.innerHTML = '<div style="color:#4a5f7a; text-align:center; padding:1rem; font-size:0.8rem;">No channels found</div>';
+          return;
+        }
+
+        channelsToRender.forEach((channel, index) => {
+          const div = document.createElement('div');
+          const isActive = channel === channels[activeChannelIndex];
+          div.className = `channel-item${isActive ? ' active' : ''}`;
+
+          let logoHtml = '';
+          if (channel.logo && channel.logo !== '') {
+            logoHtml = `<img src="${channel.logo}" alt="${channel.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'fas fa-tv\\'></i>';" />`;
+          } else {
+            logoHtml = `<i class="fas fa-tv"></i>`;
+          }
+
+          div.innerHTML = `
+            <span class="channel-number">${channel.id || index + 1}</span>
+            <span class="channel-logo">${logoHtml}</span>
+            <span class="channel-name">${channel.name}</span>
+            <span class="channel-live"><i class="fas fa-circle" style="color:#4cd964; font-size:0.4rem;"></i> LIVE</span>
+          `;
+          div.dataset.index = index;
+          div.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            const actualIndex = channels.indexOf(channelsToRender[idx]);
+            if (actualIndex !== -1) {
+              selectChannel(actualIndex);
+            }
+          });
+          channelList.appendChild(div);
+        });
+      }
+
+      function selectChannel(index) {
+        if (index < 0 || index >= channels.length) return;
+        activeChannelIndex = index;
+        const channel = channels[index];
+        if (!channel) return;
+
+        document.querySelectorAll('.channel-item').forEach((el, i) => {
+          const idx = parseInt(el.dataset.index);
+          const actualIndex = filteredChannels.indexOf(channels[idx]);
+          el.classList.toggle('active', i === activeChannelIndex);
+        });
+
+        currentStreamUrl = channel.url;
+        currentLabel = channel.label || channel.name;
+        loadStream(currentStreamUrl, currentLabel);
+        activeChannel.textContent = channel.name;
+
+        const activeEl = document.querySelector('.channel-item.active');
+        if (activeEl) {
+          activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }
+
+      function loadStream(url, label) {
+        if (!url) {
+          const defaultUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+          video.src = defaultUrl;
+          video.load();
+          video.play().catch(() => {});
+          currentStreamLabel.textContent = label || 'Default';
+          streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#4cd964; font-size:0.5rem;"></i> online';
+          return;
+        }
+
+        video.src = url;
+        video.load();
+        video.play().catch(() => {});
+
+        currentStreamLabel.textContent = label || 'Live Stream';
+        streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#ffaa00; font-size:0.5rem;"></i> loading...';
+
+        video.oncanplay = function() {
+          streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#4cd964; font-size:0.5rem;"></i> playing';
+          loadingOverlay.classList.remove('show');
+        };
+        video.onerror = function() {
+          streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#ff6b6b; font-size:0.5rem;"></i> error';
+          loadingOverlay.classList.remove('show');
+        };
+        video.onloadeddata = function() {
+          streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#4cd964; font-size:0.5rem;"></i> online';
+          loadingOverlay.classList.remove('show');
+        };
+      }
+
+      channelSearch.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        if (query === '') {
+          filteredChannels = [...channels];
+        } else {
+          filteredChannels = channels.filter(ch =>
+            ch.name.toLowerCase().includes(query)
+          );
+        }
+        renderChannels(filteredChannels);
+        channelCount.textContent = filteredChannels.length;
+      });
+
+      function applySettings(settings) {
+        if (settings.logo && settings.logo !== '') {
+          siteLogo.src = settings.logo;
+          siteLogo.style.display = 'block';
+        }
+        if (settings.siteName) {
+          siteName.textContent = settings.siteName;
+          document.title = settings.siteName || 'Live TV';
+        }
+        if (settings.siteTitle) {
+          siteTitle.textContent = settings.siteTitle;
+        }
+        if (settings.footer) {
+          footerText.innerHTML = settings.footer;
+        }
+
+        if (settings.channels && Array.isArray(settings.channels) && settings.channels.length > 0) {
+          channels = settings.channels;
+        } else {
+          channels = [...defaultChannels];
+        }
+        filteredChannels = [...channels];
+        renderChannels(filteredChannels);
+        totalChannels.textContent = channels.length;
+        channelCount.textContent = filteredChannels.length;
+
+        if (channels.length > 0) {
+          selectChannel(0);
+        } else {
+          loadStream(null, null);
+        }
+      }
+
+      function loadFromFirebase() {
+        loadingOverlay.classList.add('show');
+        const settingsRef = database.ref('settings');
+        settingsRef.once('value')
+          .then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              applySettings(data);
+            } else {
+              applySettings({});
+            }
+            loadingOverlay.classList.remove('show');
+          })
+          .catch((error) => {
+            console.error('Firebase read error:', error);
+            applySettings({});
+            loadingOverlay.classList.remove('show');
+          });
+      }
+
+      const settingsRef = database.ref('settings');
+      settingsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.channels && Array.isArray(data.channels)) {
+          channels = data.channels;
+          filteredChannels = [...channels];
+          renderChannels(filteredChannels);
+          totalChannels.textContent = channels.length;
+          channelCount.textContent = filteredChannels.length;
+        }
+      });
+
+      reloadBtn.addEventListener('click', function() {
+        if (video.src) {
+          const src = video.src;
+          video.load();
+          video.play().catch(() => {});
+          streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#ffaa00; font-size:0.5rem;"></i> reloading';
+          setTimeout(() => {
+            streamStatus.innerHTML = '<i class="fas fa-circle" style="color:#4cd964; font-size:0.5rem;"></i> online';
+          }, 800);
+        }
+      });
+
+      logoArea.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        window.location.href = 'login.html';
+      });
+
+      loadFromFirebase();
+      loadWatermarkFromFirebase();
+
+      console.log('Live TV with Image Watermark ready');
+    })();
+  </script>
+</body>
+</html>

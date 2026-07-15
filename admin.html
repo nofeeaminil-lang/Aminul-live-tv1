@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Live TV · Admin Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: #0b0e14;
+      color: #f0f4fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 2rem;
+    }
+
+    .admin-container {
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #2a313c;
+      padding-bottom: 0.75rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .logo-img {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #1e2632;
+      padding: 4px 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .brand-text {
+      font-weight: 600;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #b7d0ff, #8ab0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      background: #1f2a38;
+      border: 1px solid #3a4758;
+      color: #cbd5e1;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+
+    .back-link i {
+      color: #7aa9ff;
+    }
+
+    .back-link:hover {
+      background: #2a3749;
+      border-color: #5b7a9c;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .logout-btn {
+      background: #2a1a1a;
+      border: 1px solid #5a3a3a;
+      color: #ff8a8a;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border: none;
+    }
+
+    .logout-btn i {
+      color: #ff6b6b;
+    }
+
+    .logout-btn:hover {
+      background: #3a2222;
+      border-color: #7a4a4a;
+      transform: scale(1.02);
+    }
+
+    .admin-panel {
+      background: #121b26;
+      border-radius: 28px;
+      padding: 2rem;
+      border: 1px solid #2a384b;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .admin-panel h2 {
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: #c6d9ff;
+      border-bottom: 1px dashed #2f4057;
+      padding-bottom: 0.8rem;
+    }
+
+    .admin-panel h2 i {
+      color: #6d9eff;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .admin-card {
+      background: #1a2533;
+      border-radius: 20px;
+      padding: 1.2rem 1.2rem 1.5rem;
+      border: 1px solid #2e3f54;
+    }
+
+    .admin-card label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9db3d0;
+      margin-bottom: 0.35rem;
+    }
+
+    .admin-card input,
+    .admin-card textarea,
+    .admin-card select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border-radius: 40px;
+      border: 1px solid #384b63;
+      background: #0e1722;
+      color: #f0f6ff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.2s;
+      margin-bottom: 0.8rem;
+      resize: vertical;
+    }
+
+    .admin-card select option {
+      background: #1a2533;
+    }
+
+    .admin-card textarea {
+      border-radius: 16px;
+      min-height: 60px;
+      font-family: inherit;
+    }
+
+    .admin-card input[type="file"] {
+      padding: 0.4rem 0.6rem;
+      border-radius: 40px;
+      border: 1px solid #384b63;
+      background: #0e1722;
+      color: #f0f6ff;
+      font-size: 0.85rem;
+      outline: none;
+      transition: 0.2s;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+    }
+
+    .admin-card input[type="file"]::-webkit-file-upload-button {
+      background: #2f6bcb;
+      border: none;
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-right: 0.8rem;
+      transition: 0.2s;
+    }
+
+    .admin-card input[type="file"]::-webkit-file-upload-button:hover {
+      background: #3f7ce0;
+    }
+
+    .admin-card input:focus,
+    .admin-card textarea:focus,
+    .admin-card select:focus {
+      border-color: #5f8eff;
+      box-shadow: 0 0 0 3px rgba(70, 130, 255, 0.3);
+    }
+
+    .admin-card .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.6rem;
+    }
+
+    .btn {
+      background: #25303e;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 40px;
+      color: #e8edf5;
+      font-weight: 500;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: 0.15s;
+      border: 1px solid #35475b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn i {
+      color: #8bb4ff;
+    }
+
+    .btn-primary {
+      background: #2f6bcb;
+      border-color: #4b86f0;
+      color: white;
+    }
+    .btn-primary i {
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #3f7ce0;
+      transform: scale(1.02);
+    }
+
+    .btn-success {
+      background: #2a8e5c;
+      border-color: #3db87a;
+      color: white;
+    }
+    .btn-success i {
+      color: white;
+    }
+    .btn-success:hover {
+      background: #34a86e;
+      transform: scale(1.02);
+    }
+
+    .btn-warning {
+      background: #b8862a;
+      border-color: #dba43a;
+      color: white;
+    }
+    .btn-warning i {
+      color: white;
+    }
+    .btn-warning:hover {
+      background: #d49a34;
+      transform: scale(1.02);
+    }
+
+    .btn-danger {
+      background: #b13a4a;
+      border-color: #d45a6c;
+      color: white;
+    }
+    .btn-danger i {
+      color: #ffb3b3;
+    }
+    .btn-danger:hover {
+      background: #c94a5c;
+    }
+
+    .btn-purple {
+      background: #7c4ac7;
+      border-color: #9b6de0;
+      color: white;
+    }
+    .btn-purple i {
+      color: white;
+    }
+    .btn-purple:hover {
+      background: #925edb;
+      transform: scale(1.02);
+    }
+
+    .btn-teal {
+      background: #1a9a8a;
+      border-color: #2bc0ad;
+      color: white;
+    }
+    .btn-teal i {
+      color: white;
+    }
+    .btn-teal:hover {
+      background: #20b8a4;
+      transform: scale(1.02);
+    }
+
+    .btn-pink {
+      background: #b84a7a;
+      border-color: #d96a9a;
+      color: white;
+    }
+    .btn-pink i {
+      color: white;
+    }
+    .btn-pink:hover {
+      background: #c95a8a;
+      transform: scale(1.02);
+    }
+
+    .channel-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.2rem;
+    }
+
+    .channel-presets .btn {
+      flex: 1 0 auto;
+      justify-content: center;
+      background: #1d2b3b;
+      border-color: #34506b;
+    }
+
+    .channel-presets .btn i {
+      color: #8bb4ff;
+    }
+
+    .preview-area {
+      margin-top: 1.5rem;
+      background: #0e1722;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid #2a3f57;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #a5bedd;
+    }
+
+    .preview-area i {
+      margin-right: 0.3rem;
+      color: #6d9eff;
+    }
+
+    .preview-area .url-preview {
+      color: #c6d9ff;
+      word-break: break-all;
+      max-width: 400px;
+    }
+
+    .status-msg {
+      margin-top: 0.8rem;
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
+      background: #1a2b3d;
+      border: 1px solid #2f4057;
+      color: #b4ceff;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .status-msg.show {
+      display: block;
+    }
+
+    .status-msg.error {
+      background: #2a1a1a;
+      border-color: #6b3a3a;
+      color: #ff8a8a;
+    }
+
+    .status-msg.success {
+      background: #1a2a1a;
+      border-color: #3a6b3a;
+      color: #8aff8a;
+    }
+
+    .file-info {
+      font-size: 0.75rem;
+      color: #7f96b5;
+      margin-top: 0.3rem;
+      word-break: break-all;
+    }
+
+    .upload-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .firebase-status {
+      background: #0e1722;
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
+      border: 1px solid #2a3f57;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #a5bedd;
+      margin-top: 1rem;
+    }
+
+    .firebase-status i {
+      margin-right: 0.3rem;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status-dot.online {
+      background: #4cd964;
+    }
+    .status-dot.offline {
+      background: #ff6b6b;
+    }
+    .status-dot.saving {
+      background: #ffaa00;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .watermark-preview-box {
+      background: #0a0f16;
+      border-radius: 16px;
+      padding: 1rem;
+      border: 1px solid #2a3f57;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+      position: relative;
+    }
+
+    .watermark-preview-box .preview-watermark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px 6px 10px;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .watermark-preview-box .preview-watermark i {
+      font-size: 16px;
+    }
+
+    .watermark-preview-box .preview-watermark span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .watermark-preview-box .preview-watermark .badge {
+      font-size: 8px;
+      text-transform: uppercase;
+      background: rgba(95, 142, 255, 0.2);
+      padding: 1px 8px;
+      border-radius: 20px;
+      color: #8ab0ff;
+    }
+
+    .retry-btn {
+      background: #2a6b3a;
+      border: 1px solid #4a9a5a;
+      color: #8aff8a;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: 0.2s;
+    }
+
+    .retry-btn:hover {
+      background: #3a8a4a;
+      transform: scale(1.02);
+    }
+
+    .channel-editor {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 0.5rem;
+      border: 1px solid #2a3f57;
+      border-radius: 12px;
+      padding: 0.3rem;
+    }
+
+    .channel-editor::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .channel-editor::-webkit-scrollbar-thumb {
+      background: #2f6bcb;
+      border-radius: 10px;
+    }
+
+    .channel-editor-item {
+      display: flex;
+      gap: 0.3rem;
+      padding: 0.2rem;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+
+    .channel-editor-item input {
+      flex: 1;
+      padding: 0.2rem 0.4rem;
+      border-radius: 20px;
+      border: 1px solid #2a3f57;
+      background: #0e1722;
+      color: #f0f6ff;
+      font-size: 0.7rem;
+      outline: none;
+      margin-bottom: 0;
+    }
+
+    .channel-editor-item .remove-channel {
+      color: #ff6b6b;
+      cursor: pointer;
+      padding: 0.1rem 0.3rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      transition: 0.2s;
+    }
+
+    .channel-editor-item .remove-channel:hover {
+      background: #2a1a1a;
+    }
+
+    .add-channel-row {
+      display: flex;
+      gap: 0.3rem;
+      margin-top: 0.3rem;
+    }
+
+    .add-channel-row input {
+      flex: 1;
+      padding: 0.3rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid #2a3f57;
+      background: #0e1722;
+      color: #f0f6ff;
+      font-size: 0.75rem;
+      outline: none;
+    }
+
+    .add-channel-row .btn {
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      width: auto;
+    }
+
+    @media (max-width: 700px) {
+      .upload-section {
+        grid-template-columns: 1fr;
+      }
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+      }
+      .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .back-link,
+      .logout-btn {
+        justify-content: center;
+        flex: 1;
+      }
+      .brand-text {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="header">
+      <div class="logo-area">
+        <img src="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Live TV Logo" class="logo-img" id="adminLogo" onerror="this.style.display='none'" />
+        <span class="brand-text" id="adminBrand">Admin Panel</span>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="back-link">
+          <i class="fas fa-arrow-left"></i> User Panel
+        </a>
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2><i class="fas fa-sliders-h"></i> Full Control Panel</h2>
+
+      <div class="firebase-status">
+        <span><i class="fas fa-database"></i> Firebase: <span id="firebaseStatus"><span class="status-dot saving"></span> Connecting...</span></span>
+        <span><i class="fas fa-clock"></i> <span id="liveTime"></span></span>
+        <span><i class="fas fa-sync-alt"></i> <span id="syncStatus">Auto-sync: ON</span></span>
+        <span><button class="retry-btn" id="retryFirebaseBtn"><i class="fas fa-redo"></i> Retry</button></span>
+      </div>
+
+      <div class="upload-section">
+        <div class="admin-card">
+          <label><i class="fas fa-upload"></i> Upload .M3U8 File</label>
+          <input type="file" id="m3u8FileInput" accept=".m3u8,.m3u" />
+          <button class="btn btn-teal" id="uploadM3U8Btn"><i class="fas fa-cloud-upload-alt"></i> Upload & Play M3U8</button>
+          <div class="file-info" id="m3u8FileInfo">No file selected</div>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-upload"></i> Upload .TS File</label>
+          <input type="file" id="tsFileInput" accept=".ts,.m2ts,.mts" />
+          <button class="btn btn-purple" id="uploadTSBtn"><i class="fas fa-cloud-upload-alt"></i> Upload & Play .TS</button>
+          <div class="file-info" id="tsFileInfo">No file selected</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <label><i class="fas fa-link"></i> M3U8 URL</label>
+          <input type="text" id="m3u8Input" placeholder="https://example.com/stream.m3u8" value="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" />
+          <button class="btn btn-primary" id="applyM3U8Btn"><i class="fas fa-play"></i> Apply M3U8</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-link"></i> .TS URL</label>
+          <input type="text" id="tsInput" placeholder="https://example.com/stream.ts" value="https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts" />
+          <button class="btn btn-primary" id="applyTSBtn"><i class="fas fa-play"></i> Apply .TS</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-list"></i> Channel List Editor</label>
+          <div class="channel-editor" id="channelEditor"></div>
+          <div class="add-channel-row">
+            <input type="text" id="newChannelName" placeholder="Channel Name" />
+            <input type="text" id="newChannelUrl" placeholder="Stream URL" style="flex:1.5;" />
+            <button class="btn btn-success" id="addChannelBtn" style="width:auto; padding:0.2rem 0.8rem;"><i class="fas fa-plus"></i></button>
+          </div>
+          <button class="btn btn-warning" id="saveChannelsBtn"><i class="fas fa-save"></i> Save Channel List</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-tag"></i> Stream Label</label>
+          <input type="text" id="streamLabelInput" placeholder="e.g. Live News" value="M3U8 · Live" />
+          <button class="btn btn-warning" id="applyLabelBtn"><i class="fas fa-pen"></i> Update Label</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-watermark"></i> Video Watermark</label>
+          <input type="text" id="wmImageInput" placeholder="Watermark Image URL" value="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" />
+          <select id="wmSizeSelect">
+            <option value="small">Small (60px)</option>
+            <option value="medium" selected>Medium (100px)</option>
+            <option value="large">Large (150px)</option>
+            <option value="xlarge">X-Large (200px)</option>
+          </select>
+          <select id="wmPositionSelect">
+            <option value="bottom-right">Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="top-left">Top Left</option>
+            <option value="center">Center</option>
+          </select>
+          <input type="range" id="wmOpacityInput" min="0" max="1" step="0.05" value="0.85" />
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem; flex-wrap:wrap;">
+            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="checkbox" id="wmEnabledCheck" checked /> Enable
+            </label>
+            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="checkbox" id="wmShowTextCheck" /> Show Text
+            </label>
+            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+              <input type="checkbox" id="wmAnimationCheck" checked /> Pulse
+            </label>
+          </div>
+          <input type="text" id="wmTextInput" placeholder="Text below watermark" value="LIVE" />
+          <button class="btn btn-pink" id="applyWatermarkBtn"><i class="fas fa-save"></i> Apply Watermark</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-paint-brush"></i> Site Branding</label>
+          <input type="text" id="siteNameInput" placeholder="Site Name" value="LiveTV" />
+          <input type="text" id="siteTitleInput" placeholder="Page Title" value="Live TV · User Panel" />
+          <input type="text" id="logoUrlInput" placeholder="Logo URL" value="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" />
+          <button class="btn btn-warning" id="applyBrandingBtn"><i class="fas fa-save"></i> Apply Branding</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-edit"></i> Footer Text</label>
+          <textarea id="footerInput" placeholder="Footer Text">Live TV · Supports M3U8 &amp; .TS</textarea>
+          <button class="btn btn-warning" id="applyFooterBtn"><i class="fas fa-save"></i> Apply Footer</button>
+        </div>
+
+        <div class="admin-card">
+          <label><i class="fas fa-star"></i> Quick Presets</label>
+          <div class="channel-presets">
+            <button class="btn" data-url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" data-label="M3U8 Test"><i class="fas fa-globe"></i> Mux</button>
+            <button class="btn" data-url="https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8" data-label="Sintel"><i class="fas fa-film"></i> Sintel</button>
+            <button class="btn" data-url="https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts" data-label="TS Sample"><i class="fas fa-file"></i> .ts</button>
+          </div>
+          <button class="btn btn-danger" id="resetDefaultBtn" style="margin-top:0.8rem;"><i class="fas fa-undo"></i> Reset to Default</button>
+        </div>
+      </div>
+
+      <div class="preview-area">
+        <span><i class="fas fa-code"></i> Current: <span id="currentPreview" class="url-preview">none</span></span>
+        <span><i class="fas fa-tag"></i> Label: <span id="currentLabelPreview">—</span></span>
+        <button class="btn btn-success" id="applyAllBtn"><i class="fas fa-check-circle"></i> Apply All Changes</button>
+      </div>
+
+      <div id="statusMsg" class="status-msg">
+        <i class="fas fa-check-circle" style="color:#4cd964;"></i> All changes applied successfully!
+      </div>
+
+      <div style="margin-top:1rem; background:#0e1722; padding:0.6rem 1rem; border-radius:40px; border:1px solid #2a3f57; display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem; color:#a5bedd;">
+        <span><i class="fas fa-info-circle"></i> Manage channels, watermark & branding</span>
+        <span><i class="fas fa-fire"></i> Firebase Realtime Database</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <i class="fas fa-tv"></i> Admin Panel · Full Control
+    </div>
+  </div>
+
+  <script>
+    if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDR7kP1HaLBE6EYB6We0C5I27A04XsgzjA",
+      authDomain: "a-m-tv.firebaseapp.com",
+      databaseURL: "https://a-m-tv-default-rtdb.firebaseio.com",
+      projectId: "a-m-tv",
+      storageBucket: "a-m-tv.firebasestorage.app",
+      messagingSenderId: "538650039061",
+      appId: "1:538650039061:web:d0ed1b4cb3412eaa93cf1c",
+      measurementId: "G-PDK3BRJE85"
+    };
+
+    let app;
+    let database;
+    let firebaseInitialized = false;
+
+    function initFirebase() {
+      try {
+        app = firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        firebaseInitialized = true;
+        document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot online"></span> Connected';
+        console.log('Firebase connected successfully');
+        return true;
+      } catch (error) {
+        console.error('Firebase init error:', error);
+        document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot offline"></span> Error: ' + error.message;
+        return false;
+      }
+    }
+
+    document.getElementById('retryFirebaseBtn').addEventListener('click', function() {
+      document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot saving"></span> Reconnecting...';
+      try {
+        if (firebase.apps.length > 0) {
+          firebase.apps[0].delete();
+        }
+      } catch (e) {}
+      setTimeout(() => {
+        initFirebase();
+        loadFromFirebase();
+      }, 500);
+    });
+
+    initFirebase();
+
+    (function() {
+      const m3u8Input = document.getElementById('m3u8Input');
+      const tsInput = document.getElementById('tsInput');
+      const m3u8FileInput = document.getElementById('m3u8FileInput');
+      const tsFileInput = document.getElementById('tsFileInput');
+      const streamLabelInput = document.getElementById('streamLabelInput');
+      const siteNameInput = document.getElementById('siteNameInput');
+      const siteTitleInput = document.getElementById('siteTitleInput');
+      const logoUrlInput = document.getElementById('logoUrlInput');
+      const footerInput = document.getElementById('footerInput');
+      const m3u8FileInfo = document.getElementById('m3u8FileInfo');
+      const tsFileInfo = document.getElementById('tsFileInfo');
+      const channelEditor = document.getElementById('channelEditor');
+      const newChannelName = document.getElementById('newChannelName');
+      const newChannelUrl = document.getElementById('newChannelUrl');
+
+      const wmImageInput = document.getElementById('wmImageInput');
+      const wmSizeSelect = document.getElementById('wmSizeSelect');
+      const wmPositionSelect = document.getElementById('wmPositionSelect');
+      const wmOpacityInput = document.getElementById('wmOpacityInput');
+      const wmEnabledCheck = document.getElementById('wmEnabledCheck');
+      const wmShowTextCheck = document.getElementById('wmShowTextCheck');
+      const wmAnimationCheck = document.getElementById('wmAnimationCheck');
+      const wmTextInput = document.getElementById('wmTextInput');
+
+      const uploadM3U8Btn = document.getElementById('uploadM3U8Btn');
+      const uploadTSBtn = document.getElementById('uploadTSBtn');
+      const applyM3U8Btn = document.getElementById('applyM3U8Btn');
+      const applyTSBtn = document.getElementById('applyTSBtn');
+      const applyLabelBtn = document.getElementById('applyLabelBtn');
+      const applyBrandingBtn = document.getElementById('applyBrandingBtn');
+      const applyFooterBtn = document.getElementById('applyFooterBtn');
+      const applyAllBtn = document.getElementById('applyAllBtn');
+      const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+      const applyWatermarkBtn = document.getElementById('applyWatermarkBtn');
+      const saveChannelsBtn = document.getElementById('saveChannelsBtn');
+      const addChannelBtn = document.getElementById('addChannelBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      const currentPreview = document.getElementById('currentPreview');
+      const currentLabelPreview = document.getElementById('currentLabelPreview');
+      const statusMsg = document.getElementById('statusMsg');
+      const liveTime = document.getElementById('liveTime');
+      const presetBtns = document.querySelectorAll('.channel-presets .btn');
+
+      const adminLogo = document.getElementById('adminLogo');
+      const adminBrand = document.getElementById('adminBrand');
+      const firebaseStatus = document.getElementById('firebaseStatus');
+      const syncStatus = document.getElementById('syncStatus');
+
+      let currentStreamUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+      let currentStreamLabel = 'M3U8 · Live';
+      let currentSiteName = 'LiveTV';
+      let currentSiteTitle = 'Live TV · User Panel';
+      let currentLogoUrl = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
+      let currentFooter = 'Live TV · Supports M3U8 & .TS';
+      let isSaving = false;
+      let channels = [];
+
+      const defaultChannels = [
+        { id: 1, name: 'CCTV 5', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'CCTV 5', logo: 'https://img.icons8.com/color/48/000000/cctv.png' },
+        { id: 2, name: 'BTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'BTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
+        { id: 3, name: 'Sangsad TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Sangsad TV', logo: 'https://img.icons8.com/color/48/000000/parliament.png' },
+        { id: 4, name: 'Ekattor TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekattor TV', logo: 'https://img.icons8.com/color/48/000000/news.png' },
+        { id: 5, name: 'Channel 1', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 1', logo: 'https://img.icons8.com/color/48/000000/tv-show.png' },
+        { id: 6, name: 'Shomoy TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Shomoy TV', logo: 'https://img.icons8.com/color/48/000000/clock.png' },
+        { id: 7, name: 'Jamuna TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Jamuna TV', logo: 'https://img.icons8.com/color/48/000000/river.png' },
+        { id: 8, name: 'DBC News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'DBC News', logo: 'https://img.icons8.com/color/48/000000/newspaper.png' },
+        { id: 9, name: 'Channel 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 24', logo: 'https://img.icons8.com/color/48/000000/24-hours.png' },
+        { id: 10, name: 'ATN News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ATN News', logo: 'https://img.icons8.com/color/48/000000/breaking-news.png' },
+        { id: 11, name: 'News 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'News 24', logo: 'https://img.icons8.com/color/48/000000/live-news.png' },
+        { id: 12, name: 'Independent TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Independent TV', logo: 'https://img.icons8.com/color/48/000000/independent.png' },
+        { id: 13, name: 'NTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'NTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
+        { id: 14, name: 'Ekushey TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekushey TV', logo: 'https://img.icons8.com/color/48/000000/21.png' },
+        { id: 15, name: 'Channel I HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel I HD', logo: 'https://img.icons8.com/color/48/000000/hd-ready.png' },
+        { id: 16, name: 'Football HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Football HD', logo: 'https://img.icons8.com/color/48/000000/football2.png' },
+        { id: 17, name: 'PRO Sports', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'PRO Sports', logo: 'https://img.icons8.com/color/48/000000/sports.png' },
+        { id: 18, name: 'Alwan TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Alwan TV', logo: 'https://img.icons8.com/color/48/000000/rainbow.png' },
+        { id: 19, name: 'Vim IPTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Vim IPTV', logo: 'https://img.icons8.com/color/48/000000/iptv.png' },
+        { id: 20, name: 'ShareExt', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ShareExt', logo: 'https://img.icons8.com/color/48/000000/share.png' }
+      ];
+
+      function showStatus(msg, type = 'success') {
+        statusMsg.innerHTML = msg;
+        statusMsg.className = 'status-msg show ' + type;
+        setTimeout(() => {
+          statusMsg.classList.remove('show');
+        }, 4000);
+      }
+
+      function updatePreview() {
+        if (currentStreamUrl) {
+          const short = currentStreamUrl.length > 50 ? currentStreamUrl.slice(0, 50) + '…' : currentStreamUrl;
+          currentPreview.textContent = short;
+        } else {
+          currentPreview.textContent = 'none';
+        }
+        currentLabelPreview.textContent = currentStreamLabel || '—';
+      }
+
+      function updateAdminBranding() {
+        adminBrand.textContent = currentSiteName || 'Admin Panel';
+        if (currentLogoUrl) {
+          adminLogo.src = currentLogoUrl;
+          adminLogo.style.display = 'block';
+        } else {
+          adminLogo.style.display = 'none';
+        }
+      }
+
+      function renderChannelEditor() {
+        channelEditor.innerHTML = '';
+        if (!channels || channels.length === 0) {
+          channelEditor.innerHTML = '<div style="color:#4a5f7a; text-align:center; padding:0.5rem; font-size:0.75rem;">No channels</div>';
+          return;
+        }
+        channels.forEach((ch, index) => {
+          const div = document.createElement('div');
+          div.className = 'channel-editor-item';
+          div.innerHTML = `
+            <span style="color:#4a5f7a; font-size:0.6rem; width:20px;">${index + 1}</span>
+            <input type="text" value="${ch.name}" class="edit-channel-name" data-index="${index}" placeholder="Name" />
+            <input type="text" value="${ch.url}" class="edit-channel-url" data-index="${index}" placeholder="URL" style="flex:1.5;" />
+            <span class="remove-channel" data-index="${index}"><i class="fas fa-times-circle"></i></span>
+          `;
+          channelEditor.appendChild(div);
+        });
+
+        document.querySelectorAll('.remove-channel').forEach(el => {
+          el.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            channels.splice(idx, 1);
+            renderChannelEditor();
+          });
+        });
+
+        document.querySelectorAll('.edit-channel-name').forEach(el => {
+          el.addEventListener('change', function() {
+            const idx = parseInt(this.dataset.index);
+            channels[idx].name = this.value;
+          });
+        });
+
+        document.querySelectorAll('.edit-channel-url').forEach(el => {
+          el.addEventListener('change', function() {
+            const idx = parseInt(this.dataset.index);
+            channels[idx].url = this.value;
+            channels[idx].label = this.value;
+          });
+        });
+      }
+
+      function saveChannelsToFirebase() {
+        if (!firebaseInitialized) {
+          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
+          return;
+        }
+
+        document.querySelectorAll('.edit-channel-name').forEach(el => {
+          const idx = parseInt(el.dataset.index);
+          if (channels[idx]) channels[idx].name = el.value;
+        });
+        document.querySelectorAll('.edit-channel-url').forEach(el => {
+          const idx = parseInt(el.dataset.index);
+          if (channels[idx]) {
+            channels[idx].url = el.value;
+            channels[idx].label = el.value;
+          }
+        });
+
+        const settingsRef = database.ref('settings');
+        settingsRef.once('value').then((snapshot) => {
+          const data = snapshot.val() || {};
+          data.channels = channels;
+          data.updatedAt = firebase.database.ServerValue.TIMESTAMP;
+
+          settingsRef.set(data).then(() => {
+            showStatus('✅ Channel list saved to Firebase!', 'success');
+            syncStatus.innerHTML = '<span class="status-dot online"></span> Saved to Firebase';
+          }).catch((error) => {
+            showStatus('❌ Error saving channels: ' + error.message, 'error');
+          });
+        }).catch((error) => {
+          showStatus('❌ Error reading channels: ' + error.message, 'error');
+        });
+      }
+
+      function addChannel() {
+        const name = newChannelName.value.trim();
+        const url = newChannelUrl.value.trim();
+        if (!name || !url) {
+          showStatus('Please enter both name and URL', 'error');
+          return;
+        }
+        const newId = channels.length > 0 ? Math.max(...channels.map(c => c.id)) + 1 : 1;
+        channels.push({
+          id: newId,
+          name: name,
+          url: url,
+          label: url,
+          logo: 'https://img.icons8.com/color/48/000000/tv.png'
+        });
+        newChannelName.value = '';
+        newChannelUrl.value = '';
+        renderChannelEditor();
+        showStatus('✅ Channel added: ' + name, 'success');
+      }
+
+      function saveWatermarkToFirebase() {
+        if (!firebaseInitialized) {
+          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
+          return;
+        }
+
+        const data = {
+          image: wmImageInput.value || '',
+          size: wmSizeSelect.value,
+          position: wmPositionSelect.value,
+          opacity: parseFloat(wmOpacityInput.value),
+          enabled: wmEnabledCheck.checked,
+          showText: wmShowTextCheck.checked,
+          animation: wmAnimationCheck.checked,
+          text: wmTextInput.value || 'LIVE'
+        };
+
+        database.ref('watermark').set(data)
+          .then(() => {
+            showStatus('✅ Watermark saved to Firebase!', 'success');
+          })
+          .catch((error) => {
+            showStatus('❌ Error saving watermark: ' + error.message, 'error');
+          });
+      }
+
+      function saveToFirebase() {
+        if (!firebaseInitialized) {
+          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
+          return;
+        }
+
+        if (isSaving) return;
+        isSaving = true;
+        syncStatus.innerHTML = '<span class="status-dot saving"></span> Saving...';
+
+        const settings = {
+          streamUrl: currentStreamUrl,
+          streamLabel: currentStreamLabel,
+          siteName: currentSiteName,
+          siteTitle: currentSiteTitle,
+          logo: currentLogoUrl,
+          footer: currentFooter,
+          channels: channels,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        database.ref('settings').set(settings)
+          .then(() => {
+            isSaving = false;
+            syncStatus.innerHTML = '<span class="status-dot online"></span> Saved to Firebase';
+            showStatus('✅ Settings saved to Firebase!', 'success');
+          })
+          .catch((error) => {
+            isSaving = false;
+            syncStatus.innerHTML = '<span class="status-dot offline"></span> Save failed';
+            showStatus('❌ Firebase save error: ' + error.message, 'error');
+          });
+      }
+
+      function applyStream(url, label) {
+        if (!url || url.trim() === '') {
+          showStatus('Please enter a valid URL', 'error');
+          return;
+        }
+        currentStreamUrl = url.trim();
+        if (label) currentStreamLabel = label;
+        streamLabelInput.value = currentStreamLabel;
+        updatePreview();
+        saveToFirebase();
+        showStatus('Stream updated: ' + currentStreamLabel, 'success');
+      }
+
+      function applyLabel(label) {
+        if (!label || label.trim() === '') {
+          showStatus('Please enter a label', 'error');
+          return;
+        }
+        currentStreamLabel = label.trim();
+        updatePreview();
+        saveToFirebase();
+        showStatus('Label updated: ' + currentStreamLabel, 'success');
+      }
+
+      function applyBranding(name, title, logo) {
+        if (name) currentSiteName = name;
+        if (title) currentSiteTitle = title;
+        if (logo) currentLogoUrl = logo;
+        updateAdminBranding();
+        saveToFirebase();
+        showStatus('Branding updated', 'success');
+      }
+
+      function applyFooter(footer) {
+        if (footer) currentFooter = footer;
+        saveToFirebase();
+        showStatus('Footer updated', 'success');
+      }
+
+      function handleM3U8FileUpload(file) {
+        if (!file) {
+          showStatus('Please select a .m3u8 file first', 'error');
+          return;
+        }
+        if (!file.name.toLowerCase().endsWith('.m3u8') && !file.name.toLowerCase().endsWith('.m3u')) {
+          showStatus('Please select a valid .m3u8 file', 'error');
+          return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        const sizeKB = (file.size / 1024).toFixed(2);
+        m3u8FileInfo.textContent = `📁 ${file.name} (${sizeKB} KB) - Ready to play`;
+        m3u8FileInfo.style.color = '#4cd964';
+        currentStreamUrl = objectUrl;
+        currentStreamLabel = file.name.replace(/\.[^.]+$/, '') + ' (M3U8)';
+        streamLabelInput.value = currentStreamLabel;
+        m3u8Input.value = objectUrl;
+        updatePreview();
+        saveToFirebase();
+        showStatus(`✅ ${file.name} uploaded!`, 'success');
+      }
+
+      function handleTSFileUpload(file) {
+        if (!file) {
+          showStatus('Please select a .ts file first', 'error');
+          return;
+        }
+        if (!file.name.toLowerCase().endsWith('.ts') &&
+          !file.name.toLowerCase().endsWith('.m2ts') &&
+          !file.name.toLowerCase().endsWith('.mts')) {
+          showStatus('Please select a valid .ts file', 'error');
+          return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        tsFileInfo.textContent = `📁 ${file.name} (${sizeMB} MB) - Ready to play`;
+        tsFileInfo.style.color = '#4cd964';
+        currentStreamUrl = objectUrl;
+        currentStreamLabel = file.name.replace(/\.[^.]+$/, '') + ' (TS)';
+        streamLabelInput.value = currentStreamLabel;
+        tsInput.value = objectUrl;
+        updatePreview();
+        saveToFirebase();
+        showStatus(`✅ ${file.name} uploaded!`, 'success');
+      }
+
+      function applyAllChanges() {
+        if (!currentStreamUrl) {
+          showStatus('No stream selected!', 'error');
+          return;
+        }
+        saveToFirebase();
+        saveWatermarkToFirebase();
+        saveChannelsToFirebase();
+        showStatus('✅ All changes saved to Firebase!', 'success');
+      }
+
+      function resetToDefault() {
+        currentStreamUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+        currentStreamLabel = 'M3U8 · Default';
+        currentSiteName = 'LiveTV';
+        currentSiteTitle = 'Live TV · User Panel';
+        currentLogoUrl = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
+        currentFooter = 'Live TV · Supports M3U8 & .TS';
+        channels = JSON.parse(JSON.stringify(defaultChannels));
+
+        m3u8Input.value = currentStreamUrl;
+        tsInput.value = 'https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts';
+        streamLabelInput.value = currentStreamLabel;
+        siteNameInput.value = currentSiteName;
+        siteTitleInput.value = currentSiteTitle;
+        logoUrlInput.value = currentLogoUrl;
+        footerInput.value = currentFooter;
+        m3u8FileInput.value = '';
+        tsFileInput.value = '';
+        m3u8FileInfo.textContent = 'No file selected';
+        m3u8FileInfo.style.color = '#7f96b5';
+        tsFileInfo.textContent = 'No file selected';
+        tsFileInfo.style.color = '#7f96b5';
+
+        wmImageInput.value = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
+        wmSizeSelect.value = 'medium';
+        wmPositionSelect.value = 'bottom-right';
+        wmOpacityInput.value = '0.85';
+        wmEnabledCheck.checked = true;
+        wmShowTextCheck.checked = false;
+        wmAnimationCheck.checked = true;
+        wmTextInput.value = 'LIVE';
+
+        renderChannelEditor();
+        updatePreview();
+        updateAdminBranding();
+        saveToFirebase();
+        saveWatermarkToFirebase();
+        saveChannelsToFirebase();
+        showStatus('Reset to default settings', 'success');
+      }
+
+      function loadFromFirebase() {
+        if (!firebaseInitialized) {
+          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
+          return;
+        }
+
+        const settingsRef = database.ref('settings');
+        settingsRef.once('value')
+          .then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              if (data.streamUrl) currentStreamUrl = data.streamUrl;
+              if (data.streamLabel) currentStreamLabel = data.streamLabel;
+              if (data.siteName) currentSiteName = data.siteName;
+              if (data.siteTitle) currentSiteTitle = data.siteTitle;
+              if (data.logo) currentLogoUrl = data.logo;
+              if (data.footer) currentFooter = data.footer;
+              if (data.channels && Array.isArray(data.channels)) {
+                channels = data.channels;
+              } else {
+                channels = JSON.parse(JSON.stringify(defaultChannels));
+              }
+
+              m3u8Input.value = currentStreamUrl;
+              streamLabelInput.value = currentStreamLabel;
+              siteNameInput.value = currentSiteName;
+              siteTitleInput.value = currentSiteTitle;
+              logoUrlInput.value = currentLogoUrl;
+              footerInput.value = currentFooter;
+
+              renderChannelEditor();
+              updatePreview();
+              updateAdminBranding();
+              firebaseStatus.innerHTML = '<span class="status-dot online"></span> Connected';
+              syncStatus.innerHTML = '<span class="status-dot online"></span> Synced';
+            } else {
+              channels = JSON.parse(JSON.stringify(defaultChannels));
+              renderChannelEditor();
+            }
+          })
+          .catch((error) => {
+            console.error('Firebase read error:', error);
+            firebaseStatus.innerHTML = '<span class="status-dot offline"></span> Error: ' + error.message;
+            showStatus('❌ Firebase read error: ' + error.message, 'error');
+            channels = JSON.parse(JSON.stringify(defaultChannels));
+            renderChannelEditor();
+          });
+
+        const watermarkRef = database.ref('watermark');
+        watermarkRef.once('value')
+          .then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              if (data.image) wmImageInput.value = data.image;
+              if (data.size) wmSizeSelect.value = data.size;
+              if (data.position) wmPositionSelect.value = data.position;
+              if (data.opacity !== undefined) wmOpacityInput.value = data.opacity;
+              if (data.enabled !== undefined) wmEnabledCheck.checked = data.enabled;
+              if (data.showText !== undefined) wmShowTextCheck.checked = data.showText;
+              if (data.animation !== undefined) wmAnimationCheck.checked = data.animation;
+              if (data.text) wmTextInput.value = data.text;
+            }
+          })
+          .catch((error) => {
+            console.error('Watermark load error:', error);
+          });
+      }
+
+      addChannelBtn.addEventListener('click', addChannel);
+      newChannelUrl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addChannel();
+      });
+      newChannelName.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addChannel();
+      });
+
+      saveChannelsBtn.addEventListener('click', saveChannelsToFirebase);
+
+      m3u8FileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+          const file = this.files[0];
+          const sizeKB = (file.size / 1024).toFixed(2);
+          m3u8FileInfo.textContent = `📁 ${file.name} (${sizeKB} KB) - Click "Upload & Play"`;
+          m3u8FileInfo.style.color = '#b4ceff';
+        } else {
+          m3u8FileInfo.textContent = 'No file selected';
+          m3u8FileInfo.style.color = '#7f96b5';
+        }
+      });
+
+      tsFileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+          const file = this.files[0];
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          tsFileInfo.textContent = `📁 ${file.name} (${sizeMB} MB) - Click "Upload & Play"`;
+          tsFileInfo.style.color = '#b4ceff';
+        } else {
+          tsFileInfo.textContent = 'No file selected';
+          tsFileInfo.style.color = '#7f96b5';
+        }
+      });
+
+      uploadM3U8Btn.addEventListener('click', function() {
+        if (m3u8FileInput.files && m3u8FileInput.files.length > 0) {
+          handleM3U8FileUpload(m3u8FileInput.files[0]);
+        } else {
+          showStatus('Please select a .m3u8 file first', 'error');
+        }
+      });
+
+      uploadTSBtn.addEventListener('click', function() {
+        if (tsFileInput.files && tsFileInput.files.length > 0) {
+          handleTSFileUpload(tsFileInput.files[0]);
+        } else {
+          showStatus('Please select a .ts file first', 'error');
+        }
+      });
+
+      applyM3U8Btn.addEventListener('click', function() {
+        const url = m3u8Input.value.trim();
+        if (url) {
+          applyStream(url, 'M3U8 Stream');
+          streamLabelInput.value = currentStreamLabel;
+        } else {
+          showStatus('Please enter an M3U8 URL', 'error');
+        }
+      });
+
+      applyTSBtn.addEventListener('click', function() {
+        const url = tsInput.value.trim();
+        if (url) {
+          applyStream(url, '.TS Stream');
+          streamLabelInput.value = currentStreamLabel;
+        } else {
+          showStatus('Please enter a .TS URL', 'error');
+        }
+      });
+
+      applyLabelBtn.addEventListener('click', function() {
+        const label = streamLabelInput.value.trim();
+        applyLabel(label);
+      });
+
+      applyBrandingBtn.addEventListener('click', function() {
+        const name = siteNameInput.value.trim() || 'LiveTV';
+        const title = siteTitleInput.value.trim() || 'Live TV · User Panel';
+        const logo = logoUrlInput.value.trim() || '';
+        applyBranding(name, title, logo);
+      });
+
+      applyFooterBtn.addEventListener('click', function() {
+        const footer = footerInput.value.trim() || 'Live TV · Supports M3U8 & .TS';
+        applyFooter(footer);
+      });
+
+      applyAllBtn.addEventListener('click', applyAllChanges);
+      resetDefaultBtn.addEventListener('click', resetToDefault);
+      applyWatermarkBtn.addEventListener('click', saveWatermarkToFirebase);
+
+      presetBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          const label = this.getAttribute('data-label') || 'Preset';
+          if (url) {
+            currentStreamUrl = url;
+            currentStreamLabel = label;
+            m3u8Input.value = url;
+            tsInput.value = '';
+            streamLabelInput.value = label;
+            updatePreview();
+            saveToFirebase();
+            showStatus('Preset loaded: ' + label, 'success');
+          }
+        });
+      });
+
+      streamLabelInput.addEventListener('input', function() {
+        currentLabelPreview.textContent = this.value || '—';
+      });
+
+      logoutBtn.addEventListener('click', function() {
+        sessionStorage.removeItem('adminLoggedIn');
+        window.location.href = 'login.html';
+      });
+
+      function updateClock() {
+        const now = new Date();
+        liveTime.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      setTimeout(() => {
+        loadFromFirebase();
+      }, 1000);
+      console.log('Admin panel ready');
+    })();
+  </script>
+</body>
+</html>
