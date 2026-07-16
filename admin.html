@@ -1,1441 +1,1583 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-  <title>Live TV · Admin Panel</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-    }
-
-    body {
-      background: #0b0e14;
-      color: #f0f4fa;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1.5rem 1rem 2rem;
-    }
-
-    .admin-container {
-      max-width: 1100px;
-      width: 100%;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem 1.5rem;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid #2a313c;
-      padding-bottom: 0.75rem;
-    }
-
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .logo-img {
-      height: 52px;
-      width: auto;
-      object-fit: contain;
-      border-radius: 10px;
-      background: #1e2632;
-      padding: 4px 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    .brand-text {
-      font-weight: 600;
-      font-size: 1.5rem;
-      background: linear-gradient(135deg, #b7d0ff, #8ab0ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-    }
-
-    .back-link {
-      background: #1f2a38;
-      border: 1px solid #3a4758;
-      color: #cbd5e1;
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 500;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      text-decoration: none;
-    }
-
-    .back-link i {
-      color: #7aa9ff;
-    }
-
-    .back-link:hover {
-      background: #2a3749;
-      border-color: #5b7a9c;
-      color: white;
-      transform: scale(1.02);
-    }
-
-    .logout-btn {
-      background: #2a1a1a;
-      border: 1px solid #5a3a3a;
-      color: #ff8a8a;
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 500;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      border: none;
-    }
-
-    .logout-btn i {
-      color: #ff6b6b;
-    }
-
-    .logout-btn:hover {
-      background: #3a2222;
-      border-color: #7a4a4a;
-      transform: scale(1.02);
-    }
-
-    .admin-panel {
-      background: #121b26;
-      border-radius: 28px;
-      padding: 2rem;
-      border: 1px solid #2a384b;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    }
-
-    .admin-panel h2 {
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      color: #c6d9ff;
-      border-bottom: 1px dashed #2f4057;
-      padding-bottom: 0.8rem;
-    }
-
-    .admin-panel h2 i {
-      color: #6d9eff;
-    }
-
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .admin-card {
-      background: #1a2533;
-      border-radius: 20px;
-      padding: 1.2rem 1.2rem 1.5rem;
-      border: 1px solid #2e3f54;
-    }
-
-    .admin-card label {
-      display: block;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #9db3d0;
-      margin-bottom: 0.35rem;
-    }
-
-    .admin-card input,
-    .admin-card textarea,
-    .admin-card select {
-      width: 100%;
-      padding: 0.6rem 0.9rem;
-      border-radius: 40px;
-      border: 1px solid #384b63;
-      background: #0e1722;
-      color: #f0f6ff;
-      font-size: 0.95rem;
-      outline: none;
-      transition: 0.2s;
-      margin-bottom: 0.8rem;
-      resize: vertical;
-    }
-
-    .admin-card select option {
-      background: #1a2533;
-    }
-
-    .admin-card textarea {
-      border-radius: 16px;
-      min-height: 60px;
-      font-family: inherit;
-    }
-
-    .admin-card input[type="file"] {
-      padding: 0.4rem 0.6rem;
-      border-radius: 40px;
-      border: 1px solid #384b63;
-      background: #0e1722;
-      color: #f0f6ff;
-      font-size: 0.85rem;
-      outline: none;
-      transition: 0.2s;
-      margin-bottom: 0.8rem;
-      cursor: pointer;
-    }
-
-    .admin-card input[type="file"]::-webkit-file-upload-button {
-      background: #2f6bcb;
-      border: none;
-      color: white;
-      padding: 0.4rem 1rem;
-      border-radius: 30px;
-      cursor: pointer;
-      margin-right: 0.8rem;
-      transition: 0.2s;
-    }
-
-    .admin-card input[type="file"]::-webkit-file-upload-button:hover {
-      background: #3f7ce0;
-    }
-
-    .admin-card input:focus,
-    .admin-card textarea:focus,
-    .admin-card select:focus {
-      border-color: #5f8eff;
-      box-shadow: 0 0 0 3px rgba(70, 130, 255, 0.3);
-    }
-
-    .admin-card .btn {
-      width: 100%;
-      justify-content: center;
-      padding: 0.6rem;
-    }
-
-    .btn {
-      background: #25303e;
-      border: none;
-      padding: 0.45rem 1rem;
-      border-radius: 40px;
-      color: #e8edf5;
-      font-weight: 500;
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: 0.15s;
-      border: 1px solid #35475b;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn i {
-      color: #8bb4ff;
-    }
-
-    .btn-primary {
-      background: #2f6bcb;
-      border-color: #4b86f0;
-      color: white;
-    }
-    .btn-primary i {
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #3f7ce0;
-      transform: scale(1.02);
-    }
-
-    .btn-success {
-      background: #2a8e5c;
-      border-color: #3db87a;
-      color: white;
-    }
-    .btn-success i {
-      color: white;
-    }
-    .btn-success:hover {
-      background: #34a86e;
-      transform: scale(1.02);
-    }
-
-    .btn-warning {
-      background: #b8862a;
-      border-color: #dba43a;
-      color: white;
-    }
-    .btn-warning i {
-      color: white;
-    }
-    .btn-warning:hover {
-      background: #d49a34;
-      transform: scale(1.02);
-    }
-
-    .btn-danger {
-      background: #b13a4a;
-      border-color: #d45a6c;
-      color: white;
-    }
-    .btn-danger i {
-      color: #ffb3b3;
-    }
-    .btn-danger:hover {
-      background: #c94a5c;
-    }
-
-    .btn-purple {
-      background: #7c4ac7;
-      border-color: #9b6de0;
-      color: white;
-    }
-    .btn-purple i {
-      color: white;
-    }
-    .btn-purple:hover {
-      background: #925edb;
-      transform: scale(1.02);
-    }
-
-    .btn-teal {
-      background: #1a9a8a;
-      border-color: #2bc0ad;
-      color: white;
-    }
-    .btn-teal i {
-      color: white;
-    }
-    .btn-teal:hover {
-      background: #20b8a4;
-      transform: scale(1.02);
-    }
-
-    .btn-pink {
-      background: #b84a7a;
-      border-color: #d96a9a;
-      color: white;
-    }
-    .btn-pink i {
-      color: white;
-    }
-    .btn-pink:hover {
-      background: #c95a8a;
-      transform: scale(1.02);
-    }
-
-    .channel-presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 0.2rem;
-    }
-
-    .channel-presets .btn {
-      flex: 1 0 auto;
-      justify-content: center;
-      background: #1d2b3b;
-      border-color: #34506b;
-    }
-
-    .channel-presets .btn i {
-      color: #8bb4ff;
-    }
-
-    .preview-area {
-      margin-top: 1.5rem;
-      background: #0e1722;
-      padding: 0.8rem 1.2rem;
-      border-radius: 40px;
-      border: 1px solid #2a3f57;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: #a5bedd;
-    }
-
-    .preview-area i {
-      margin-right: 0.3rem;
-      color: #6d9eff;
-    }
-
-    .preview-area .url-preview {
-      color: #c6d9ff;
-      word-break: break-all;
-      max-width: 400px;
-    }
-
-    .status-msg {
-      margin-top: 0.8rem;
-      padding: 0.6rem 1rem;
-      border-radius: 40px;
-      background: #1a2b3d;
-      border: 1px solid #2f4057;
-      color: #b4ceff;
-      font-size: 0.85rem;
-      display: none;
-    }
-
-    .status-msg.show {
-      display: block;
-    }
-
-    .status-msg.error {
-      background: #2a1a1a;
-      border-color: #6b3a3a;
-      color: #ff8a8a;
-    }
-
-    .status-msg.success {
-      background: #1a2a1a;
-      border-color: #3a6b3a;
-      color: #8aff8a;
-    }
-
-    .file-info {
-      font-size: 0.75rem;
-      color: #7f96b5;
-      margin-top: 0.3rem;
-      word-break: break-all;
-    }
-
-    .upload-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .firebase-status {
-      background: #0e1722;
-      padding: 0.6rem 1rem;
-      border-radius: 40px;
-      border: 1px solid #2a3f57;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: #a5bedd;
-      margin-top: 1rem;
-    }
-
-    .firebase-status i {
-      margin-right: 0.3rem;
-    }
-
-    .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-    }
-
-    .status-dot.online {
-      background: #4cd964;
-    }
-    .status-dot.offline {
-      background: #ff6b6b;
-    }
-    .status-dot.saving {
-      background: #ffaa00;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    .watermark-preview-box {
-      background: #0a0f16;
-      border-radius: 16px;
-      padding: 1rem;
-      border: 1px solid #2a3f57;
-      margin-top: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 80px;
-      position: relative;
-    }
-
-    .watermark-preview-box .preview-watermark {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
-      padding: 6px 14px 6px 10px;
-      border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .watermark-preview-box .preview-watermark i {
-      font-size: 16px;
-    }
-
-    .watermark-preview-box .preview-watermark span {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .watermark-preview-box .preview-watermark .badge {
-      font-size: 8px;
-      text-transform: uppercase;
-      background: rgba(95, 142, 255, 0.2);
-      padding: 1px 8px;
-      border-radius: 20px;
-      color: #8ab0ff;
-    }
-
-    .retry-btn {
-      background: #2a6b3a;
-      border: 1px solid #4a9a5a;
-      color: #8aff8a;
-      padding: 0.3rem 1rem;
-      border-radius: 40px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: 0.2s;
-    }
-
-    .retry-btn:hover {
-      background: #3a8a4a;
-      transform: scale(1.02);
-    }
-
-    .channel-editor {
-      max-height: 200px;
-      overflow-y: auto;
-      margin-bottom: 0.5rem;
-      border: 1px solid #2a3f57;
-      border-radius: 12px;
-      padding: 0.3rem;
-    }
-
-    .channel-editor::-webkit-scrollbar {
-      width: 3px;
-    }
-
-    .channel-editor::-webkit-scrollbar-thumb {
-      background: #2f6bcb;
-      border-radius: 10px;
-    }
-
-    .channel-editor-item {
-      display: flex;
-      gap: 0.3rem;
-      padding: 0.2rem;
-      align-items: center;
-      font-size: 0.75rem;
-    }
-
-    .channel-editor-item input {
-      flex: 1;
-      padding: 0.2rem 0.4rem;
-      border-radius: 20px;
-      border: 1px solid #2a3f57;
-      background: #0e1722;
-      color: #f0f6ff;
-      font-size: 0.7rem;
-      outline: none;
-      margin-bottom: 0;
-    }
-
-    .channel-editor-item .remove-channel {
-      color: #ff6b6b;
-      cursor: pointer;
-      padding: 0.1rem 0.3rem;
-      border-radius: 50%;
-      font-size: 0.7rem;
-      transition: 0.2s;
-    }
-
-    .channel-editor-item .remove-channel:hover {
-      background: #2a1a1a;
-    }
-
-    .add-channel-row {
-      display: flex;
-      gap: 0.3rem;
-      margin-top: 0.3rem;
-    }
-
-    .add-channel-row input {
-      flex: 1;
-      padding: 0.3rem 0.6rem;
-      border-radius: 20px;
-      border: 1px solid #2a3f57;
-      background: #0e1722;
-      color: #f0f6ff;
-      font-size: 0.75rem;
-      outline: none;
-    }
-
-    .add-channel-row .btn {
-      padding: 0.2rem 0.6rem;
-      font-size: 0.7rem;
-      width: auto;
-    }
-
-    @media (max-width: 700px) {
-      .upload-section {
-        grid-template-columns: 1fr;
-      }
-      .header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.8rem;
-      }
-      .header-actions {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .back-link,
-      .logout-btn {
-        justify-content: center;
-        flex: 1;
-      }
-      .brand-text {
-        font-size: 1.3rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অ্যাডমিন প্যানেল - VIP LIVE TV</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
+    </script>
+    <style>
+        /* ===== থিম ভেরিয়েবল ===== */
+        :root {
+            --bg-primary: #0b0e1a;
+            --bg-secondary: #141a2e;
+            --bg-card: #1a1f38;
+            --bg-input: #1e2340;
+            --border-color: #2a3050;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --text-muted: #5a6385;
+            --accent-color: #f7971e;
+            --accent-hover: #ffd200;
+            --danger: #d32f2f;
+            --success: #1f8b4c;
+            --shadow: rgba(0, 0, 0, 0.6);
+            --card-shadow: rgba(0, 0, 0, 0.4);
+            --gradient-start: #f7971e;
+            --gradient-end: #ffd200;
+            --radius: 24px;
+            --transition: 0.3s;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f2f8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #e8ecf4;
+            --border-color: #d0d5e0;
+            --text-primary: #1a1f38;
+            --text-secondary: #4a5070;
+            --text-muted: #8892b0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --card-shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0b0e1a;
+            --bg-secondary: #141a2e;
+            --bg-card: #1a1f38;
+            --bg-input: #1e2340;
+            --border-color: #2a3050;
+            --text-primary: #ffffff;
+            --text-secondary: #8892b0;
+            --text-muted: #5a6385;
+            --shadow: rgba(0, 0, 0, 0.6);
+            --card-shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="custom"] {
+            --accent-color: #7c3aed;
+            --accent-hover: #a78bfa;
+            --gradient-start: #7c3aed;
+            --gradient-end: #a78bfa;
+        }
+        [data-theme="custom2"] {
+            --accent-color: #ec4899;
+            --accent-hover: #f472b6;
+            --gradient-start: #ec4899;
+            --gradient-end: #f472b6;
+        }
+        [data-theme="custom3"] {
+            --accent-color: #14b8a6;
+            --accent-hover: #2dd4bf;
+            --gradient-start: #14b8a6;
+            --gradient-end: #2dd4bf;
+        }
+        [data-theme="custom4"] {
+            --accent-color: #f59e0b;
+            --accent-hover: #fbbf24;
+            --gradient-start: #f59e0b;
+            --gradient-end: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: background var(--transition), color var(--transition), border-color var(--transition),
+                box-shadow var(--transition);
+        }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 20px 0;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 22px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-area img {
+            height: 44px;
+            width: auto;
+            border-radius: 10px;
+        }
+        .logo-area h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .back-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            border: 1px solid var(--accent-color);
+            padding: 7px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+        .back-link:hover {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+        }
+        .logout-btn {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: 7px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .logout-btn:hover {
+            opacity: 0.85;
+        }
+        .sync-status {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: var(--bg-card);
+        }
+        .sync-status.online {
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+        .sync-status.offline {
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 40px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        .tab-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 30px var(--card-shadow);
+        }
+        .card h3 {
+            color: var(--accent-color);
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .card h4 {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 10px;
+            margin-top: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .form-row input,
+        .form-row textarea,
+        .form-row select {
+            flex: 1;
+            min-width: 160px;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+        .form-row textarea {
+            border-radius: 16px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-row input:focus,
+        .form-row textarea:focus,
+        .form-row select:focus {
+            border-color: var(--accent-color);
+        }
+        .form-row button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 40px;
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        .form-row button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+        .btn-danger {
+            background: var(--danger) !important;
+            color: #fff !important;
+        }
+        .btn-danger:hover {
+            opacity: 0.85 !important;
+            transform: scale(1.02) !important;
+        }
+        .btn-success {
+            background: var(--success) !important;
+            color: #fff !important;
+        }
+        .btn-success:hover {
+            opacity: 0.85 !important;
+            transform: scale(1.02) !important;
+        }
+        .btn-secondary {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+        .btn-secondary:hover {
+            background: var(--border-color) !important;
+            transform: scale(1.02) !important;
+        }
+
+        .channel-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .channel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            border-left: 4px solid var(--accent-color);
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .channel-item .info {
+            flex: 1;
+            min-width: 120px;
+        }
+        .channel-item .info .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .channel-item .info .url {
+            font-size: 11px;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+        .channel-item .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .channel-item .actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .channel-item .actions .edit-btn {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+        .channel-item .actions .edit-btn:hover {
+            background: var(--border-color);
+        }
+        .channel-item .actions .delete-btn {
+            background: var(--danger);
+            color: #fff;
+        }
+        .channel-item .actions .delete-btn:hover {
+            opacity: 0.85;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .stat-box {
+            background: var(--bg-card);
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent-color);
+        }
+        .stat-box .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .visitor-log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        .visitor-log .log-item {
+            padding: 6px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+        }
+        .visitor-log .log-item .time {
+            color: var(--text-muted);
+        }
+        .visitor-log .log-item .channel {
+            color: var(--accent-color);
+        }
+
+        .preview-box {
+            background: var(--bg-card);
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 1px dashed var(--border-color);
+        }
+        .preview-box .preview-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .preview-box .preview-logo img {
+            height: 36px;
+            width: auto;
+            border-radius: 8px;
+        }
+        .preview-box .preview-logo span {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== ওয়াটারমার্ক প্রিভিউ ===== */
+        .watermark-preview {
+            background: #000;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .watermark-preview .wm-demo {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .watermark-preview .wm-demo img {
+            height: 28px;
+            width: auto;
+            border-radius: 4px;
+        }
+        .watermark-preview .wm-demo span {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+        .watermark-preview .wm-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            position: absolute;
+            bottom: 6px;
+            right: 10px;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .theme-option {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+        .theme-option.active {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+        .theme-option .check {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+        .theme-option.active .check {
+            display: flex;
+        }
+
+        .notification-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--accent-color);
+        }
+        .notification-item .ntitle {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .notification-item .nbody {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .notification-item .ntime {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .notification-item .nstatus {
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: var(--success);
+            color: #fff;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px var(--shadow);
+            display: none;
+            z-index: 999;
+            font-size: 14px;
+        }
+        .toast.error {
+            background: var(--danger);
+        }
+        #importFile {
+            display: none;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-card);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
+        }
+        .footer-text {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 20px 0;
+        }
+
+        #loginPage {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 40px 30px;
+            box-shadow: 0 8px 40px var(--shadow);
+            text-align: center;
+        }
+        #loginPage .logo-img {
+            height: 70px;
+            width: auto;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+        #loginPage h2 {
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        #loginPage p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        #loginPage input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 14px;
+        }
+        #loginPage input:focus {
+            border-color: var(--accent-color);
+        }
+        #loginPage button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 40px;
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        #loginPage button:hover {
+            background: var(--accent-hover);
+        }
+        #loginPage .error-msg {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+        #loginPage .hint {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 16px;
+        }
+
+        #adminPanel {
+            display: none;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .password-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: var(--text-muted);
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+        .switch input:checked+.slider {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        .switch input:checked+.slider:before {
+            transform: translateX(22px);
+            background: #fff;
+        }
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="admin-container">
-    <div class="header">
-      <div class="logo-area">
-        <img src="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Live TV Logo" class="logo-img" id="adminLogo" onerror="this.style.display='none'" />
-        <span class="brand-text" id="adminBrand">Admin Panel</span>
-      </div>
-      <div class="header-actions">
-        <a href="index.html" class="back-link">
-          <i class="fas fa-arrow-left"></i> User Panel
-        </a>
-        <button class="logout-btn" id="logoutBtn">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+
+    <!-- ===== লগইন পেজ ===== -->
+    <div id="loginPage">
+        <img class="logo-img" id="loginLogo" src="https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Logo">
+        <h2>🔐 অ্যাডমিন লগইন</h2>
+        <p>অ্যাডমিন প্যানেল অ্যাক্সেস করতে পাসওয়ার্ড দিন</p>
+        <input type="password" id="loginPassword" placeholder="পাসওয়ার্ড লিখুন..." autofocus>
+        <button id="loginBtn">লগইন করুন</button>
+        <div class="error-msg" id="loginError">❌ ভুল পাসওয়ার্ড!</div>
+        <div class="hint">💡 ডিফল্ট পাসওয়ার্ড: <strong>admin123</strong></div>
     </div>
 
-    <div class="admin-panel">
-      <h2><i class="fas fa-sliders-h"></i> Full Control Panel</h2>
+    <!-- ===== অ্যাডমিন প্যানেল ===== -->
+    <div id="adminPanel">
+        <div class="container">
+            <div class="header">
+                <div class="logo-area">
+                    <img id="adminLogo" src="https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Logo">
+                    <h1 id="adminTitle">VIP LIVE TV</h1>
+                </div>
+                <div class="header-actions">
+                    <span class="sync-status" id="syncStatus">🔄 সিঙ্ক হচ্ছে...</span>
+                    <a href="user.html" class="back-link">🏠 ইউজার পেজ</a>
+                    <button class="logout-btn" id="logoutBtn">🚪 লগআউট</button>
+                </div>
+            </div>
 
-      <div class="firebase-status">
-        <span><i class="fas fa-database"></i> Firebase: <span id="firebaseStatus"><span class="status-dot saving"></span> Connecting...</span></span>
-        <span><i class="fas fa-clock"></i> <span id="liveTime"></span></span>
-        <span><i class="fas fa-sync-alt"></i> <span id="syncStatus">Auto-sync: ON</span></span>
-        <span><button class="retry-btn" id="retryFirebaseBtn"><i class="fas fa-redo"></i> Retry</button></span>
-      </div>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="channels">📡 চ্যানেল</button>
+                <button class="tab-btn" data-tab="settings">⚙️ সেটিংস</button>
+                <button class="tab-btn" data-tab="watermark">💧 ওয়াটারমার্ক</button>
+                <button class="tab-btn" data-tab="analytics">📊 অ্যানালাইটিক্স</button>
+                <button class="tab-btn" data-tab="notifications">🔔 নোটিফিকেশন</button>
+            </div>
 
-      <div class="upload-section">
-        <div class="admin-card">
-          <label><i class="fas fa-upload"></i> Upload .M3U8 File</label>
-          <input type="file" id="m3u8FileInput" accept=".m3u8,.m3u" />
-          <button class="btn btn-teal" id="uploadM3U8Btn"><i class="fas fa-cloud-upload-alt"></i> Upload & Play M3U8</button>
-          <div class="file-info" id="m3u8FileInfo">No file selected</div>
+            <!-- Tab 1: Channels -->
+            <div class="tab-content active" id="tab-channels">
+                <div class="card">
+                    <h3>📺 চ্যানেল ম্যানেজমেন্ট</h3>
+                    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));">
+                        <div class="stat-box"><div class="number" id="totalChannels">0</div><div class="label">মোট চ্যানেল</div></div>
+                        <div class="stat-box"><div class="number" id="activeChannels">0</div><div class="label">অ্যাক্টিভ</div></div>
+                    </div>
+
+                    <div class="form-row">
+                        <input type="text" id="channelName" placeholder="চ্যানেলের নাম">
+                        <input type="text" id="channelUrl" placeholder="M3U8 লিংক">
+                        <button id="addChannelBtn">➕ চ্যানেল যোগ</button>
+                    </div>
+
+                    <div class="channel-list" id="adminChannelList"></div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+                        <button id="resetDefaultBtn" class="btn-danger">🔄 ডিফল্ট রিসেট</button>
+                        <button id="exportBtn" class="btn-success">📤 এক্সপোর্ট</button>
+                        <button id="importBtn" class="btn-secondary">📥 ইমপোর্ট</button>
+                        <input type="file" id="importFile" accept=".json">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Settings -->
+            <div class="tab-content" id="tab-settings">
+                <div class="card">
+                    <h3>⚙️ সাইট সেটিংস</h3>
+
+                    <div class="form-row">
+                        <input type="text" id="siteNameInput" placeholder="সাইটের নাম">
+                        <button id="updateSiteNameBtn">💾 নাম আপডেট</button>
+                    </div>
+
+                    <div class="form-row">
+                        <input type="text" id="logoUrlInput" placeholder="লোগো URL">
+                        <button id="updateLogoBtn">💾 লোগো আপডেট</button>
+                    </div>
+
+                    <div class="preview-box">
+                        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:8px;">📱 প্রিভিউ:</p>
+                        <div class="preview-logo">
+                            <img id="previewLogo" src="https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Logo">
+                            <span id="previewName">VIP LIVE TV</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-color);">
+                        <h4>🎨 থিম নির্বাচন</h4>
+                        <div class="theme-selector">
+                            <div class="theme-option active" data-theme="dark" style="background:#0b0e1a;border-color:#2a3050;">
+                                <span class="check">✓</span>
+                            </div>
+                            <div class="theme-option" data-theme="light" style="background:#f0f2f8;border-color:#d0d5e0;">
+                                <span class="check">✓</span>
+                            </div>
+                            <div class="theme-option" data-theme="custom" style="background:#7c3aed;border-color:#7c3aed;">
+                                <span class="check">✓</span>
+                            </div>
+                            <div class="theme-option" data-theme="custom2" style="background:#ec4899;border-color:#ec4899;">
+                                <span class="check">✓</span>
+                            </div>
+                            <div class="theme-option" data-theme="custom3" style="background:#14b8a6;border-color:#14b8a6;">
+                                <span class="check">✓</span>
+                            </div>
+                            <div class="theme-option" data-theme="custom4" style="background:#f59e0b;border-color:#f59e0b;">
+                                <span class="check">✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="password-section">
+                        <h4>🔑 অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h4>
+                        <div class="form-row">
+                            <input type="password" id="newPassword" placeholder="নতুন পাসওয়ার্ড">
+                            <input type="password" id="confirmPassword" placeholder="আবার লিখুন">
+                            <button id="changePasswordBtn" class="btn-success">💾 পরিবর্তন</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);">
+                        <button id="resetSettingsBtn" class="btn-danger">🔄 ডিফল্ট রিসেট</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Tab 3: Watermark ===== -->
+            <div class="tab-content" id="tab-watermark">
+                <div class="card">
+                    <h3>💧 ওয়াটারমার্ক কাস্টমাইজ</h3>
+                    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+                        ভিডিও প্লেয়ারের উপর ওয়াটারমার্ক দেখাবে
+                    </p>
+
+                    <div class="form-row">
+                        <div class="switch-label">
+                            <label class="switch">
+                                <input type="checkbox" id="wmEnabled">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="wmStatusLabel">ওয়াটারমার্ক অফ</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <input type="text" id="wmLogoUrl" placeholder="ওয়াটারমার্ক লোগো URL">
+                        <button id="updateWmLogoBtn">💾 লোগো আপডেট</button>
+                    </div>
+
+                    <div class="form-row">
+                        <input type="text" id="wmText" placeholder="ওয়াটারমার্ক টেক্সট (যেমন: VIP LIVE TV)">
+                    </div>
+
+                    <div class="form-row">
+                        <select id="wmPosition">
+                            <option value="top-left">↖️ উপরে-বাম</option>
+                            <option value="top-center">⬆️ উপরে-মাঝ</option>
+                            <option value="top-right">↗️ উপরে-ডান</option>
+                            <option value="center">⏺️ মাঝখানে</option>
+                            <option value="bottom-left">↙️ নিচে-বাম</option>
+                            <option value="bottom-center">⬇️ নিচে-মাঝ</option>
+                            <option value="bottom-right" selected>↘️ নিচে-ডান</option>
+                        </select>
+                        <input type="number" id="wmSize" placeholder="সাইজ (px)" value="60" min="20" max="200">
+                        <input type="number" id="wmOpacity" placeholder="স্বচ্ছতা (0-100)" value="70" min="0" max="100">
+                        <button id="updateWmSettingsBtn" class="btn-success">💾 ওয়াটারমার্ক সেভ</button>
+                    </div>
+
+                    <div style="margin-top:10px;">
+                        <button id="resetWmDefaultBtn" class="btn-danger">🔄 ডিফল্ট ওয়াটারমার্ক</button>
+                    </div>
+
+                    <div class="watermark-preview" id="wmPreview">
+                        <div class="wm-demo" id="wmDemo">
+                            <img id="wmPreviewLogo" src="https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" alt="Logo">
+                            <span id="wmPreviewText">VIP LIVE TV</span>
+                        </div>
+                        <span class="wm-label">🔍 প্রিভিউ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Analytics -->
+            <div class="tab-content" id="tab-analytics">
+                <div class="card">
+                    <h3>📊 ভিজিটর অ্যানালাইটিক্স</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box"><div class="number" id="totalVisits">0</div><div class="label">মোট ভিজিট</div></div>
+                        <div class="stat-box"><div class="number" id="onlineUsers">0</div><div class="label">অনলাইন ইউজার</div></div>
+                        <div class="stat-box"><div class="number" id="todayVisits">0</div><div class="label">আজকের ভিজিট</div></div>
+                        <div class="stat-box"><div class="number" id="totalClicks">0</div><div class="label">মোট ক্লিক</div></div>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                        <button id="resetAnalyticsBtn" class="btn-danger">🗑️ রিসেট</button>
+                        <button id="refreshAnalyticsBtn" class="btn-secondary">🔄 রিফ্রেশ</button>
+                    </div>
+                    <h4 style="color:var(--text-secondary);font-size:14px;margin-bottom:10px;">🕒 সাম্প্রতিক ভিজিটর লগ</h4>
+                    <div class="visitor-log" id="visitorLog">
+                        <div style="text-align:center;color:var(--text-muted);padding:20px;">লোড হচ্ছে...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Notifications -->
+            <div class="tab-content" id="tab-notifications">
+                <div class="card">
+                    <h3>🔔 নোটিফিকেশন পাঠান</h3>
+                    <div class="form-row">
+                        <input type="text" id="notifTitle" placeholder="শিরোনাম">
+                    </div>
+                    <div class="form-row">
+                        <textarea id="notifBody" placeholder="বার্তা..." rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <select id="notifType">
+                            <option value="info">ℹ️ তথ্য</option>
+                            <option value="success">✅ সফল</option>
+                            <option value="warning">⚠️ সতর্কতা</option>
+                            <option value="danger">🔴 জরুরি</option>
+                        </select>
+                        <button id="sendNotifBtn" class="btn-success">📨 পাঠান</button>
+                        <button id="clearNotifBtn" class="btn-danger">🗑️ সব মুছুন</button>
+                    </div>
+                    <h4 style="color:var(--text-secondary);font-size:14px;margin-bottom:10px;margin-top:16px;">📬 পূর্ববর্তী</h4>
+                    <div class="notification-list" id="notificationList">
+                        <div style="text-align:center;color:var(--text-muted);padding:20px;">কোনো নোটিফিকেশন নেই</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-text">⚡ VIP LIVE TV · অ্যাডমিন প্যানেল v2.0</div>
         </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-upload"></i> Upload .TS File</label>
-          <input type="file" id="tsFileInput" accept=".ts,.m2ts,.mts" />
-          <button class="btn btn-purple" id="uploadTSBtn"><i class="fas fa-cloud-upload-alt"></i> Upload & Play .TS</button>
-          <div class="file-info" id="tsFileInfo">No file selected</div>
-        </div>
-      </div>
-
-      <div class="admin-grid">
-        <div class="admin-card">
-          <label><i class="fas fa-link"></i> M3U8 URL</label>
-          <input type="text" id="m3u8Input" placeholder="https://example.com/stream.m3u8" value="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" />
-          <button class="btn btn-primary" id="applyM3U8Btn"><i class="fas fa-play"></i> Apply M3U8</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-link"></i> .TS URL</label>
-          <input type="text" id="tsInput" placeholder="https://example.com/stream.ts" value="https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts" />
-          <button class="btn btn-primary" id="applyTSBtn"><i class="fas fa-play"></i> Apply .TS</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-list"></i> Channel List Editor</label>
-          <div class="channel-editor" id="channelEditor"></div>
-          <div class="add-channel-row">
-            <input type="text" id="newChannelName" placeholder="Channel Name" />
-            <input type="text" id="newChannelUrl" placeholder="Stream URL" style="flex:1.5;" />
-            <button class="btn btn-success" id="addChannelBtn" style="width:auto; padding:0.2rem 0.8rem;"><i class="fas fa-plus"></i></button>
-          </div>
-          <button class="btn btn-warning" id="saveChannelsBtn"><i class="fas fa-save"></i> Save Channel List</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-tag"></i> Stream Label</label>
-          <input type="text" id="streamLabelInput" placeholder="e.g. Live News" value="M3U8 · Live" />
-          <button class="btn btn-warning" id="applyLabelBtn"><i class="fas fa-pen"></i> Update Label</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-watermark"></i> Video Watermark</label>
-          <input type="text" id="wmImageInput" placeholder="Watermark Image URL" value="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" />
-          <select id="wmSizeSelect">
-            <option value="small">Small (60px)</option>
-            <option value="medium" selected>Medium (100px)</option>
-            <option value="large">Large (150px)</option>
-            <option value="xlarge">X-Large (200px)</option>
-          </select>
-          <select id="wmPositionSelect">
-            <option value="bottom-right">Bottom Right</option>
-            <option value="bottom-left">Bottom Left</option>
-            <option value="top-right">Top Right</option>
-            <option value="top-left">Top Left</option>
-            <option value="center">Center</option>
-          </select>
-          <input type="range" id="wmOpacityInput" min="0" max="1" step="0.05" value="0.85" />
-          <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem; flex-wrap:wrap;">
-            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-              <input type="checkbox" id="wmEnabledCheck" checked /> Enable
-            </label>
-            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-              <input type="checkbox" id="wmShowTextCheck" /> Show Text
-            </label>
-            <label style="font-size:0.8rem; color:#9db3d0; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-              <input type="checkbox" id="wmAnimationCheck" checked /> Pulse
-            </label>
-          </div>
-          <input type="text" id="wmTextInput" placeholder="Text below watermark" value="LIVE" />
-          <button class="btn btn-pink" id="applyWatermarkBtn"><i class="fas fa-save"></i> Apply Watermark</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-paint-brush"></i> Site Branding</label>
-          <input type="text" id="siteNameInput" placeholder="Site Name" value="LiveTV" />
-          <input type="text" id="siteTitleInput" placeholder="Page Title" value="Live TV · User Panel" />
-          <input type="text" id="logoUrlInput" placeholder="Logo URL" value="https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png" />
-          <button class="btn btn-warning" id="applyBrandingBtn"><i class="fas fa-save"></i> Apply Branding</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-edit"></i> Footer Text</label>
-          <textarea id="footerInput" placeholder="Footer Text">Live TV · Supports M3U8 &amp; .TS</textarea>
-          <button class="btn btn-warning" id="applyFooterBtn"><i class="fas fa-save"></i> Apply Footer</button>
-        </div>
-
-        <div class="admin-card">
-          <label><i class="fas fa-star"></i> Quick Presets</label>
-          <div class="channel-presets">
-            <button class="btn" data-url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" data-label="M3U8 Test"><i class="fas fa-globe"></i> Mux</button>
-            <button class="btn" data-url="https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8" data-label="Sintel"><i class="fas fa-film"></i> Sintel</button>
-            <button class="btn" data-url="https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts" data-label="TS Sample"><i class="fas fa-file"></i> .ts</button>
-          </div>
-          <button class="btn btn-danger" id="resetDefaultBtn" style="margin-top:0.8rem;"><i class="fas fa-undo"></i> Reset to Default</button>
-        </div>
-      </div>
-
-      <div class="preview-area">
-        <span><i class="fas fa-code"></i> Current: <span id="currentPreview" class="url-preview">none</span></span>
-        <span><i class="fas fa-tag"></i> Label: <span id="currentLabelPreview">—</span></span>
-        <button class="btn btn-success" id="applyAllBtn"><i class="fas fa-check-circle"></i> Apply All Changes</button>
-      </div>
-
-      <div id="statusMsg" class="status-msg">
-        <i class="fas fa-check-circle" style="color:#4cd964;"></i> All changes applied successfully!
-      </div>
-
-      <div style="margin-top:1rem; background:#0e1722; padding:0.6rem 1rem; border-radius:40px; border:1px solid #2a3f57; display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem; color:#a5bedd;">
-        <span><i class="fas fa-info-circle"></i> Manage channels, watermark & branding</span>
-        <span><i class="fas fa-fire"></i> Firebase Realtime Database</span>
-      </div>
     </div>
 
-    <div class="footer">
-      <i class="fas fa-tv"></i> Admin Panel · Full Control
-    </div>
-  </div>
+    <div class="toast" id="toast"></div>
 
-  <script>
-    if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
-      window.location.href = 'login.html';
-    }
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDR7kP1HaLBE6EYB6We0C5I27A04XsgzjA",
-      authDomain: "a-m-tv.firebaseapp.com",
-      databaseURL: "https://a-m-tv-default-rtdb.firebaseio.com",
-      projectId: "a-m-tv",
-      storageBucket: "a-m-tv.firebasestorage.app",
-      messagingSenderId: "538650039061",
-      appId: "1:538650039061:web:d0ed1b4cb3412eaa93cf1c",
-      measurementId: "G-PDK3BRJE85"
-    };
-
-    let app;
-    let database;
-    let firebaseInitialized = false;
-
-    function initFirebase() {
-      try {
-        app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        firebaseInitialized = true;
-        document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot online"></span> Connected';
-        console.log('Firebase connected successfully');
-        return true;
-      } catch (error) {
-        console.error('Firebase init error:', error);
-        document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot offline"></span> Error: ' + error.message;
-        return false;
-      }
-    }
-
-    document.getElementById('retryFirebaseBtn').addEventListener('click', function() {
-      document.getElementById('firebaseStatus').innerHTML = '<span class="status-dot saving"></span> Reconnecting...';
-      try {
-        if (firebase.apps.length > 0) {
-          firebase.apps[0].delete();
-        }
-      } catch (e) {}
-      setTimeout(() => {
-        initFirebase();
-        loadFromFirebase();
-      }, 500);
-    });
-
-    initFirebase();
-
-    (function() {
-      const m3u8Input = document.getElementById('m3u8Input');
-      const tsInput = document.getElementById('tsInput');
-      const m3u8FileInput = document.getElementById('m3u8FileInput');
-      const tsFileInput = document.getElementById('tsFileInput');
-      const streamLabelInput = document.getElementById('streamLabelInput');
-      const siteNameInput = document.getElementById('siteNameInput');
-      const siteTitleInput = document.getElementById('siteTitleInput');
-      const logoUrlInput = document.getElementById('logoUrlInput');
-      const footerInput = document.getElementById('footerInput');
-      const m3u8FileInfo = document.getElementById('m3u8FileInfo');
-      const tsFileInfo = document.getElementById('tsFileInfo');
-      const channelEditor = document.getElementById('channelEditor');
-      const newChannelName = document.getElementById('newChannelName');
-      const newChannelUrl = document.getElementById('newChannelUrl');
-
-      const wmImageInput = document.getElementById('wmImageInput');
-      const wmSizeSelect = document.getElementById('wmSizeSelect');
-      const wmPositionSelect = document.getElementById('wmPositionSelect');
-      const wmOpacityInput = document.getElementById('wmOpacityInput');
-      const wmEnabledCheck = document.getElementById('wmEnabledCheck');
-      const wmShowTextCheck = document.getElementById('wmShowTextCheck');
-      const wmAnimationCheck = document.getElementById('wmAnimationCheck');
-      const wmTextInput = document.getElementById('wmTextInput');
-
-      const uploadM3U8Btn = document.getElementById('uploadM3U8Btn');
-      const uploadTSBtn = document.getElementById('uploadTSBtn');
-      const applyM3U8Btn = document.getElementById('applyM3U8Btn');
-      const applyTSBtn = document.getElementById('applyTSBtn');
-      const applyLabelBtn = document.getElementById('applyLabelBtn');
-      const applyBrandingBtn = document.getElementById('applyBrandingBtn');
-      const applyFooterBtn = document.getElementById('applyFooterBtn');
-      const applyAllBtn = document.getElementById('applyAllBtn');
-      const resetDefaultBtn = document.getElementById('resetDefaultBtn');
-      const applyWatermarkBtn = document.getElementById('applyWatermarkBtn');
-      const saveChannelsBtn = document.getElementById('saveChannelsBtn');
-      const addChannelBtn = document.getElementById('addChannelBtn');
-      const logoutBtn = document.getElementById('logoutBtn');
-
-      const currentPreview = document.getElementById('currentPreview');
-      const currentLabelPreview = document.getElementById('currentLabelPreview');
-      const statusMsg = document.getElementById('statusMsg');
-      const liveTime = document.getElementById('liveTime');
-      const presetBtns = document.querySelectorAll('.channel-presets .btn');
-
-      const adminLogo = document.getElementById('adminLogo');
-      const adminBrand = document.getElementById('adminBrand');
-      const firebaseStatus = document.getElementById('firebaseStatus');
-      const syncStatus = document.getElementById('syncStatus');
-
-      let currentStreamUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-      let currentStreamLabel = 'M3U8 · Live';
-      let currentSiteName = 'LiveTV';
-      let currentSiteTitle = 'Live TV · User Panel';
-      let currentLogoUrl = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
-      let currentFooter = 'Live TV · Supports M3U8 & .TS';
-      let isSaving = false;
-      let channels = [];
-
-      const defaultChannels = [
-        { id: 1, name: 'CCTV 5', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'CCTV 5', logo: 'https://img.icons8.com/color/48/000000/cctv.png' },
-        { id: 2, name: 'BTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'BTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
-        { id: 3, name: 'Sangsad TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Sangsad TV', logo: 'https://img.icons8.com/color/48/000000/parliament.png' },
-        { id: 4, name: 'Ekattor TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekattor TV', logo: 'https://img.icons8.com/color/48/000000/news.png' },
-        { id: 5, name: 'Channel 1', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 1', logo: 'https://img.icons8.com/color/48/000000/tv-show.png' },
-        { id: 6, name: 'Shomoy TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Shomoy TV', logo: 'https://img.icons8.com/color/48/000000/clock.png' },
-        { id: 7, name: 'Jamuna TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Jamuna TV', logo: 'https://img.icons8.com/color/48/000000/river.png' },
-        { id: 8, name: 'DBC News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'DBC News', logo: 'https://img.icons8.com/color/48/000000/newspaper.png' },
-        { id: 9, name: 'Channel 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel 24', logo: 'https://img.icons8.com/color/48/000000/24-hours.png' },
-        { id: 10, name: 'ATN News', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ATN News', logo: 'https://img.icons8.com/color/48/000000/breaking-news.png' },
-        { id: 11, name: 'News 24', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'News 24', logo: 'https://img.icons8.com/color/48/000000/live-news.png' },
-        { id: 12, name: 'Independent TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Independent TV', logo: 'https://img.icons8.com/color/48/000000/independent.png' },
-        { id: 13, name: 'NTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'NTV', logo: 'https://img.icons8.com/color/48/000000/television.png' },
-        { id: 14, name: 'Ekushey TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Ekushey TV', logo: 'https://img.icons8.com/color/48/000000/21.png' },
-        { id: 15, name: 'Channel I HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Channel I HD', logo: 'https://img.icons8.com/color/48/000000/hd-ready.png' },
-        { id: 16, name: 'Football HD', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Football HD', logo: 'https://img.icons8.com/color/48/000000/football2.png' },
-        { id: 17, name: 'PRO Sports', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'PRO Sports', logo: 'https://img.icons8.com/color/48/000000/sports.png' },
-        { id: 18, name: 'Alwan TV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Alwan TV', logo: 'https://img.icons8.com/color/48/000000/rainbow.png' },
-        { id: 19, name: 'Vim IPTV', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'Vim IPTV', logo: 'https://img.icons8.com/color/48/000000/iptv.png' },
-        { id: 20, name: 'ShareExt', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', label: 'ShareExt', logo: 'https://img.icons8.com/color/48/000000/share.png' }
-      ];
-
-      function showStatus(msg, type = 'success') {
-        statusMsg.innerHTML = msg;
-        statusMsg.className = 'status-msg show ' + type;
-        setTimeout(() => {
-          statusMsg.classList.remove('show');
-        }, 4000);
-      }
-
-      function updatePreview() {
-        if (currentStreamUrl) {
-          const short = currentStreamUrl.length > 50 ? currentStreamUrl.slice(0, 50) + '…' : currentStreamUrl;
-          currentPreview.textContent = short;
-        } else {
-          currentPreview.textContent = 'none';
-        }
-        currentLabelPreview.textContent = currentStreamLabel || '—';
-      }
-
-      function updateAdminBranding() {
-        adminBrand.textContent = currentSiteName || 'Admin Panel';
-        if (currentLogoUrl) {
-          adminLogo.src = currentLogoUrl;
-          adminLogo.style.display = 'block';
-        } else {
-          adminLogo.style.display = 'none';
-        }
-      }
-
-      function renderChannelEditor() {
-        channelEditor.innerHTML = '';
-        if (!channels || channels.length === 0) {
-          channelEditor.innerHTML = '<div style="color:#4a5f7a; text-align:center; padding:0.5rem; font-size:0.75rem;">No channels</div>';
-          return;
-        }
-        channels.forEach((ch, index) => {
-          const div = document.createElement('div');
-          div.className = 'channel-editor-item';
-          div.innerHTML = `
-            <span style="color:#4a5f7a; font-size:0.6rem; width:20px;">${index + 1}</span>
-            <input type="text" value="${ch.name}" class="edit-channel-name" data-index="${index}" placeholder="Name" />
-            <input type="text" value="${ch.url}" class="edit-channel-url" data-index="${index}" placeholder="URL" style="flex:1.5;" />
-            <span class="remove-channel" data-index="${index}"><i class="fas fa-times-circle"></i></span>
-          `;
-          channelEditor.appendChild(div);
-        });
-
-        document.querySelectorAll('.remove-channel').forEach(el => {
-          el.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            channels.splice(idx, 1);
-            renderChannelEditor();
-          });
-        });
-
-        document.querySelectorAll('.edit-channel-name').forEach(el => {
-          el.addEventListener('change', function() {
-            const idx = parseInt(this.dataset.index);
-            channels[idx].name = this.value;
-          });
-        });
-
-        document.querySelectorAll('.edit-channel-url').forEach(el => {
-          el.addEventListener('change', function() {
-            const idx = parseInt(this.dataset.index);
-            channels[idx].url = this.value;
-            channels[idx].label = this.value;
-          });
-        });
-      }
-
-      function saveChannelsToFirebase() {
-        if (!firebaseInitialized) {
-          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
-          return;
-        }
-
-        document.querySelectorAll('.edit-channel-name').forEach(el => {
-          const idx = parseInt(el.dataset.index);
-          if (channels[idx]) channels[idx].name = el.value;
-        });
-        document.querySelectorAll('.edit-channel-url').forEach(el => {
-          const idx = parseInt(el.dataset.index);
-          if (channels[idx]) {
-            channels[idx].url = el.value;
-            channels[idx].label = el.value;
-          }
-        });
-
-        const settingsRef = database.ref('settings');
-        settingsRef.once('value').then((snapshot) => {
-          const data = snapshot.val() || {};
-          data.channels = channels;
-          data.updatedAt = firebase.database.ServerValue.TIMESTAMP;
-
-          settingsRef.set(data).then(() => {
-            showStatus('✅ Channel list saved to Firebase!', 'success');
-            syncStatus.innerHTML = '<span class="status-dot online"></span> Saved to Firebase';
-          }).catch((error) => {
-            showStatus('❌ Error saving channels: ' + error.message, 'error');
-          });
-        }).catch((error) => {
-          showStatus('❌ Error reading channels: ' + error.message, 'error');
-        });
-      }
-
-      function addChannel() {
-        const name = newChannelName.value.trim();
-        const url = newChannelUrl.value.trim();
-        if (!name || !url) {
-          showStatus('Please enter both name and URL', 'error');
-          return;
-        }
-        const newId = channels.length > 0 ? Math.max(...channels.map(c => c.id)) + 1 : 1;
-        channels.push({
-          id: newId,
-          name: name,
-          url: url,
-          label: url,
-          logo: 'https://img.icons8.com/color/48/000000/tv.png'
-        });
-        newChannelName.value = '';
-        newChannelUrl.value = '';
-        renderChannelEditor();
-        showStatus('✅ Channel added: ' + name, 'success');
-      }
-
-      function saveWatermarkToFirebase() {
-        if (!firebaseInitialized) {
-          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
-          return;
-        }
-
-        const data = {
-          image: wmImageInput.value || '',
-          size: wmSizeSelect.value,
-          position: wmPositionSelect.value,
-          opacity: parseFloat(wmOpacityInput.value),
-          enabled: wmEnabledCheck.checked,
-          showText: wmShowTextCheck.checked,
-          animation: wmAnimationCheck.checked,
-          text: wmTextInput.value || 'LIVE'
+    <script>
+        // ============================================================
+        // Firebase Config
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDR7kP1HaLBE6EYB6We0C5I27A04XsgzjA",
+            authDomain: "a-m-tv.firebaseapp.com",
+            databaseURL: "https://a-m-tv-default-rtdb.firebaseio.com",
+            projectId: "a-m-tv",
+            storageBucket: "a-m-tv.firebasestorage.app",
+            messagingSenderId: "538650039061",
+            appId: "1:538650039061:web:d0ed1b4cb3412eaa93cf1c",
+            measurementId: "G-PDK3BRJE85"
         };
 
-        database.ref('watermark').set(data)
-          .then(() => {
-            showStatus('✅ Watermark saved to Firebase!', 'success');
-          })
-          .catch((error) => {
-            showStatus('❌ Error saving watermark: ' + error.message, 'error');
-          });
-      }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-      function saveToFirebase() {
-        if (!firebaseInitialized) {
-          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
-          return;
+        // ============================================================
+        // Theme System
+        // ============================================================
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('vipTheme', theme);
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.theme === theme);
+            });
         }
 
-        if (isSaving) return;
-        isSaving = true;
-        syncStatus.innerHTML = '<span class="status-dot saving"></span> Saving...';
-
-        const settings = {
-          streamUrl: currentStreamUrl,
-          streamLabel: currentStreamLabel,
-          siteName: currentSiteName,
-          siteTitle: currentSiteTitle,
-          logo: currentLogoUrl,
-          footer: currentFooter,
-          channels: channels,
-          updatedAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        database.ref('settings').set(settings)
-          .then(() => {
-            isSaving = false;
-            syncStatus.innerHTML = '<span class="status-dot online"></span> Saved to Firebase';
-            showStatus('✅ Settings saved to Firebase!', 'success');
-          })
-          .catch((error) => {
-            isSaving = false;
-            syncStatus.innerHTML = '<span class="status-dot offline"></span> Save failed';
-            showStatus('❌ Firebase save error: ' + error.message, 'error');
-          });
-      }
-
-      function applyStream(url, label) {
-        if (!url || url.trim() === '') {
-          showStatus('Please enter a valid URL', 'error');
-          return;
-        }
-        currentStreamUrl = url.trim();
-        if (label) currentStreamLabel = label;
-        streamLabelInput.value = currentStreamLabel;
-        updatePreview();
-        saveToFirebase();
-        showStatus('Stream updated: ' + currentStreamLabel, 'success');
-      }
-
-      function applyLabel(label) {
-        if (!label || label.trim() === '') {
-          showStatus('Please enter a label', 'error');
-          return;
-        }
-        currentStreamLabel = label.trim();
-        updatePreview();
-        saveToFirebase();
-        showStatus('Label updated: ' + currentStreamLabel, 'success');
-      }
-
-      function applyBranding(name, title, logo) {
-        if (name) currentSiteName = name;
-        if (title) currentSiteTitle = title;
-        if (logo) currentLogoUrl = logo;
-        updateAdminBranding();
-        saveToFirebase();
-        showStatus('Branding updated', 'success');
-      }
-
-      function applyFooter(footer) {
-        if (footer) currentFooter = footer;
-        saveToFirebase();
-        showStatus('Footer updated', 'success');
-      }
-
-      function handleM3U8FileUpload(file) {
-        if (!file) {
-          showStatus('Please select a .m3u8 file first', 'error');
-          return;
-        }
-        if (!file.name.toLowerCase().endsWith('.m3u8') && !file.name.toLowerCase().endsWith('.m3u')) {
-          showStatus('Please select a valid .m3u8 file', 'error');
-          return;
-        }
-        const objectUrl = URL.createObjectURL(file);
-        const sizeKB = (file.size / 1024).toFixed(2);
-        m3u8FileInfo.textContent = `📁 ${file.name} (${sizeKB} KB) - Ready to play`;
-        m3u8FileInfo.style.color = '#4cd964';
-        currentStreamUrl = objectUrl;
-        currentStreamLabel = file.name.replace(/\.[^.]+$/, '') + ' (M3U8)';
-        streamLabelInput.value = currentStreamLabel;
-        m3u8Input.value = objectUrl;
-        updatePreview();
-        saveToFirebase();
-        showStatus(`✅ ${file.name} uploaded!`, 'success');
-      }
-
-      function handleTSFileUpload(file) {
-        if (!file) {
-          showStatus('Please select a .ts file first', 'error');
-          return;
-        }
-        if (!file.name.toLowerCase().endsWith('.ts') &&
-          !file.name.toLowerCase().endsWith('.m2ts') &&
-          !file.name.toLowerCase().endsWith('.mts')) {
-          showStatus('Please select a valid .ts file', 'error');
-          return;
-        }
-        const objectUrl = URL.createObjectURL(file);
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        tsFileInfo.textContent = `📁 ${file.name} (${sizeMB} MB) - Ready to play`;
-        tsFileInfo.style.color = '#4cd964';
-        currentStreamUrl = objectUrl;
-        currentStreamLabel = file.name.replace(/\.[^.]+$/, '') + ' (TS)';
-        streamLabelInput.value = currentStreamLabel;
-        tsInput.value = objectUrl;
-        updatePreview();
-        saveToFirebase();
-        showStatus(`✅ ${file.name} uploaded!`, 'success');
-      }
-
-      function applyAllChanges() {
-        if (!currentStreamUrl) {
-          showStatus('No stream selected!', 'error');
-          return;
-        }
-        saveToFirebase();
-        saveWatermarkToFirebase();
-        saveChannelsToFirebase();
-        showStatus('✅ All changes saved to Firebase!', 'success');
-      }
-
-      function resetToDefault() {
-        currentStreamUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-        currentStreamLabel = 'M3U8 · Default';
-        currentSiteName = 'LiveTV';
-        currentSiteTitle = 'Live TV · User Panel';
-        currentLogoUrl = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
-        currentFooter = 'Live TV · Supports M3U8 & .TS';
-        channels = JSON.parse(JSON.stringify(defaultChannels));
-
-        m3u8Input.value = currentStreamUrl;
-        tsInput.value = 'https://sample-videos.com/video321/ts/bbb/bbb_ts/bbb.ts';
-        streamLabelInput.value = currentStreamLabel;
-        siteNameInput.value = currentSiteName;
-        siteTitleInput.value = currentSiteTitle;
-        logoUrlInput.value = currentLogoUrl;
-        footerInput.value = currentFooter;
-        m3u8FileInput.value = '';
-        tsFileInput.value = '';
-        m3u8FileInfo.textContent = 'No file selected';
-        m3u8FileInfo.style.color = '#7f96b5';
-        tsFileInfo.textContent = 'No file selected';
-        tsFileInfo.style.color = '#7f96b5';
-
-        wmImageInput.value = 'https://i.postimg.cc/DZCPFG73/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
-        wmSizeSelect.value = 'medium';
-        wmPositionSelect.value = 'bottom-right';
-        wmOpacityInput.value = '0.85';
-        wmEnabledCheck.checked = true;
-        wmShowTextCheck.checked = false;
-        wmAnimationCheck.checked = true;
-        wmTextInput.value = 'LIVE';
-
-        renderChannelEditor();
-        updatePreview();
-        updateAdminBranding();
-        saveToFirebase();
-        saveWatermarkToFirebase();
-        saveChannelsToFirebase();
-        showStatus('Reset to default settings', 'success');
-      }
-
-      function loadFromFirebase() {
-        if (!firebaseInitialized) {
-          showStatus('❌ Firebase not connected! Click "Retry" button.', 'error');
-          return;
+        function loadTheme() {
+            const saved = localStorage.getItem('vipTheme') || 'dark';
+            setTheme(saved);
         }
 
-        const settingsRef = database.ref('settings');
-        settingsRef.once('value')
-          .then((snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-              if (data.streamUrl) currentStreamUrl = data.streamUrl;
-              if (data.streamLabel) currentStreamLabel = data.streamLabel;
-              if (data.siteName) currentSiteName = data.siteName;
-              if (data.siteTitle) currentSiteTitle = data.siteTitle;
-              if (data.logo) currentLogoUrl = data.logo;
-              if (data.footer) currentFooter = data.footer;
-              if (data.channels && Array.isArray(data.channels)) {
-                channels = data.channels;
-              } else {
-                channels = JSON.parse(JSON.stringify(defaultChannels));
-              }
+        document.querySelectorAll('.theme-option').forEach(el => {
+            el.addEventListener('click', function() {
+                setTheme(this.dataset.theme);
+                showToast('🎨 থিম পরিবর্তন হয়েছে!');
+            });
+        });
 
-              m3u8Input.value = currentStreamUrl;
-              streamLabelInput.value = currentStreamLabel;
-              siteNameInput.value = currentSiteName;
-              siteTitleInput.value = currentSiteTitle;
-              logoUrlInput.value = currentLogoUrl;
-              footerInput.value = currentFooter;
+        // ============================================================
+        // Password
+        // ============================================================
+        const ADMIN_PASSWORD_KEY = 'adminPassword';
 
-              renderChannelEditor();
-              updatePreview();
-              updateAdminBranding();
-              firebaseStatus.innerHTML = '<span class="status-dot online"></span> Connected';
-              syncStatus.innerHTML = '<span class="status-dot online"></span> Synced';
+        function initPassword() {
+            db.ref(ADMIN_PASSWORD_KEY).transaction((current) => {
+                if (current === null || current === undefined) return 'admin123';
+                return current;
+            });
+        }
+
+        function verifyPassword(input) {
+            return new Promise((resolve, reject) => {
+                db.ref(ADMIN_PASSWORD_KEY).once('value', (snapshot) => {
+                    resolve(input === (snapshot.val() || 'admin123'));
+                }, reject);
+            });
+        }
+
+        function updatePassword(newPassword) {
+            return db.ref(ADMIN_PASSWORD_KEY).set(newPassword);
+        }
+
+        // ============================================================
+        // Login
+        // ============================================================
+        const loginPage = document.getElementById('loginPage');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        function checkSession() {
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                loginPage.style.display = 'none';
+                adminPanel.style.display = 'block';
+                loadAllData();
             } else {
-              channels = JSON.parse(JSON.stringify(defaultChannels));
-              renderChannelEditor();
+                loginPage.style.display = 'block';
+                adminPanel.style.display = 'none';
+                loginPassword.value = '';
+                loginError.style.display = 'none';
+                setTimeout(() => loginPassword.focus(), 100);
             }
-          })
-          .catch((error) => {
-            console.error('Firebase read error:', error);
-            firebaseStatus.innerHTML = '<span class="status-dot offline"></span> Error: ' + error.message;
-            showStatus('❌ Firebase read error: ' + error.message, 'error');
-            channels = JSON.parse(JSON.stringify(defaultChannels));
-            renderChannelEditor();
-          });
+        }
 
-        const watermarkRef = database.ref('watermark');
-        watermarkRef.once('value')
-          .then((snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-              if (data.image) wmImageInput.value = data.image;
-              if (data.size) wmSizeSelect.value = data.size;
-              if (data.position) wmPositionSelect.value = data.position;
-              if (data.opacity !== undefined) wmOpacityInput.value = data.opacity;
-              if (data.enabled !== undefined) wmEnabledCheck.checked = data.enabled;
-              if (data.showText !== undefined) wmShowTextCheck.checked = data.showText;
-              if (data.animation !== undefined) wmAnimationCheck.checked = data.animation;
-              if (data.text) wmTextInput.value = data.text;
+        loginBtn.addEventListener('click', async function() {
+            const password = loginPassword.value.trim();
+            if (!password) {
+                loginError.textContent = '⚠️ পাসওয়ার্ড দিন!';
+                loginError.style.display = 'block';
+                return;
             }
-          })
-          .catch((error) => {
-            console.error('Watermark load error:', error);
-          });
-      }
-
-      addChannelBtn.addEventListener('click', addChannel);
-      newChannelUrl.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') addChannel();
-      });
-      newChannelName.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') addChannel();
-      });
-
-      saveChannelsBtn.addEventListener('click', saveChannelsToFirebase);
-
-      m3u8FileInput.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-          const file = this.files[0];
-          const sizeKB = (file.size / 1024).toFixed(2);
-          m3u8FileInfo.textContent = `📁 ${file.name} (${sizeKB} KB) - Click "Upload & Play"`;
-          m3u8FileInfo.style.color = '#b4ceff';
-        } else {
-          m3u8FileInfo.textContent = 'No file selected';
-          m3u8FileInfo.style.color = '#7f96b5';
-        }
-      });
-
-      tsFileInput.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-          const file = this.files[0];
-          const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-          tsFileInfo.textContent = `📁 ${file.name} (${sizeMB} MB) - Click "Upload & Play"`;
-          tsFileInfo.style.color = '#b4ceff';
-        } else {
-          tsFileInfo.textContent = 'No file selected';
-          tsFileInfo.style.color = '#7f96b5';
-        }
-      });
-
-      uploadM3U8Btn.addEventListener('click', function() {
-        if (m3u8FileInput.files && m3u8FileInput.files.length > 0) {
-          handleM3U8FileUpload(m3u8FileInput.files[0]);
-        } else {
-          showStatus('Please select a .m3u8 file first', 'error');
-        }
-      });
-
-      uploadTSBtn.addEventListener('click', function() {
-        if (tsFileInput.files && tsFileInput.files.length > 0) {
-          handleTSFileUpload(tsFileInput.files[0]);
-        } else {
-          showStatus('Please select a .ts file first', 'error');
-        }
-      });
-
-      applyM3U8Btn.addEventListener('click', function() {
-        const url = m3u8Input.value.trim();
-        if (url) {
-          applyStream(url, 'M3U8 Stream');
-          streamLabelInput.value = currentStreamLabel;
-        } else {
-          showStatus('Please enter an M3U8 URL', 'error');
-        }
-      });
-
-      applyTSBtn.addEventListener('click', function() {
-        const url = tsInput.value.trim();
-        if (url) {
-          applyStream(url, '.TS Stream');
-          streamLabelInput.value = currentStreamLabel;
-        } else {
-          showStatus('Please enter a .TS URL', 'error');
-        }
-      });
-
-      applyLabelBtn.addEventListener('click', function() {
-        const label = streamLabelInput.value.trim();
-        applyLabel(label);
-      });
-
-      applyBrandingBtn.addEventListener('click', function() {
-        const name = siteNameInput.value.trim() || 'LiveTV';
-        const title = siteTitleInput.value.trim() || 'Live TV · User Panel';
-        const logo = logoUrlInput.value.trim() || '';
-        applyBranding(name, title, logo);
-      });
-
-      applyFooterBtn.addEventListener('click', function() {
-        const footer = footerInput.value.trim() || 'Live TV · Supports M3U8 & .TS';
-        applyFooter(footer);
-      });
-
-      applyAllBtn.addEventListener('click', applyAllChanges);
-      resetDefaultBtn.addEventListener('click', resetToDefault);
-      applyWatermarkBtn.addEventListener('click', saveWatermarkToFirebase);
-
-      presetBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-          const url = this.getAttribute('data-url');
-          const label = this.getAttribute('data-label') || 'Preset';
-          if (url) {
-            currentStreamUrl = url;
-            currentStreamLabel = label;
-            m3u8Input.value = url;
-            tsInput.value = '';
-            streamLabelInput.value = label;
-            updatePreview();
-            saveToFirebase();
-            showStatus('Preset loaded: ' + label, 'success');
-          }
+            loginBtn.textContent = '⏳ চেক করছি...';
+            loginBtn.disabled = true;
+            try {
+                if (await verifyPassword(password)) {
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    loginPage.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                    loginError.style.display = 'none';
+                    showToast('✅ লগইন সফল!');
+                    loadAllData();
+                } else {
+                    loginError.textContent = '❌ ভুল পাসওয়ার্ড!';
+                    loginError.style.display = 'block';
+                    loginPassword.value = '';
+                    loginPassword.focus();
+                }
+            } catch (err) {
+                loginError.textContent = '⚠️ সংযোগ সমস্যা!';
+                loginError.style.display = 'block';
+            }
+            loginBtn.textContent = 'লগইন করুন';
+            loginBtn.disabled = false;
         });
-      });
 
-      streamLabelInput.addEventListener('input', function() {
-        currentLabelPreview.textContent = this.value || '—';
-      });
+        loginPassword.addEventListener('keyup', (e) => { if (e.key === 'Enter') loginBtn.click(); });
 
-      logoutBtn.addEventListener('click', function() {
-        sessionStorage.removeItem('adminLoggedIn');
-        window.location.href = 'login.html';
-      });
+        logoutBtn.addEventListener('click', function() {
+            sessionStorage.removeItem('adminLoggedIn');
+            loginPage.style.display = 'block';
+            adminPanel.style.display = 'none';
+            showToast('🚪 লগআউট হয়েছে');
+        });
 
-      function updateClock() {
-        const now = new Date();
-        liveTime.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      }
-      updateClock();
-      setInterval(updateClock, 1000);
+        // ============================================================
+        // Toast
+        // ============================================================
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.style.display = 'block';
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
 
-      setTimeout(() => {
-        loadFromFirebase();
-      }, 1000);
-      console.log('Admin panel ready');
-    })();
-  </script>
+        function updateSyncStatus(online) {
+            const el = document.getElementById('syncStatus');
+            el.className = 'sync-status ' + (online ? 'online' : 'offline');
+            el.textContent = online ? '✅ সিঙ্ক হয়েছে' : '❌ সংযোগ নেই';
+        }
+
+        // ============================================================
+        // Tabs
+        // ============================================================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ============================================================
+        // 1. CHANNEL MANAGEMENT
+        // ============================================================
+        let channels = [];
+        let editingKey = null;
+
+        const channelName = document.getElementById('channelName');
+        const channelUrl = document.getElementById('channelUrl');
+        const addBtn = document.getElementById('addChannelBtn');
+        const adminList = document.getElementById('adminChannelList');
+        const totalSpan = document.getElementById('totalChannels');
+        const activeSpan = document.getElementById('activeChannels');
+
+        function loadChannels() {
+            db.ref('channels').on('value', (snapshot) => {
+                const data = snapshot.val();
+                updateSyncStatus(true);
+                channels = data ? Object.keys(data).map(key => ({ id: key, name: data[key].name || 'নাম নেই',
+                        url: data[key].url || '' })) : [];
+                renderAdminList();
+                updateChannelStats();
+            }, (err) => { updateSyncStatus(false);
+                console.error(err); });
+        }
+
+        function renderAdminList() {
+            adminList.innerHTML = '';
+            if (channels.length === 0) {
+                adminList.innerHTML =
+                    `<div style="text-align:center;padding:20px;color:var(--text-muted);">📭 কোনো চ্যানেল নেই</div>`;
+                return;
+            }
+            channels.forEach((ch) => {
+                const div = document.createElement('div');
+                div.className = 'channel-item';
+                div.innerHTML = `
+                    <div class="info"><div class="name">${ch.name}</div><div class="url">${ch.url.substring(0,50)}${ch.url.length>50?'...':''}</div></div>
+                    <div class="actions">
+                        <button class="edit-btn" data-key="${ch.id}">🖊️</button>
+                        <button class="delete-btn" data-key="${ch.id}">🗑️</button>
+                    </div>
+                `;
+                adminList.appendChild(div);
+            });
+
+            document.querySelectorAll('#adminChannelList .edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const ch = channels.find(c => c.id === this.dataset.key);
+                    if (ch) {
+                        editingKey = ch.id;
+                        channelName.value = ch.name;
+                        channelUrl.value = ch.url;
+                        addBtn.textContent = '💾 আপডেট';
+                        addBtn.style.background = 'var(--success)';
+                    }
+                });
+            });
+
+            document.querySelectorAll('#adminChannelList .delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const ch = channels.find(c => c.id === this.dataset.key);
+                    if (ch && confirm(`"${ch.name}" ডিলিট করবেন?`)) {
+                        db.ref(`channels/${ch.id}`).remove()
+                            .then(() => showToast(`✅ "${ch.name}" ডিলিট হয়েছে`))
+                            .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+                    }
+                });
+            });
+        }
+
+        function updateChannelStats() {
+            totalSpan.textContent = channels.length;
+            activeSpan.textContent = channels.filter(c => c.url && c.url.trim() !== '').length;
+        }
+
+        addBtn.addEventListener('click', function() {
+            const name = channelName.value.trim();
+            const url = channelUrl.value.trim();
+            if (!name || !url) return showToast('⚠️ নাম ও URL দিন', true);
+
+            if (editingKey) {
+                db.ref(`channels/${editingKey}`).update({ name, url })
+                    .then(() => {
+                        showToast(`✅ "${name}" আপডেট হয়েছে`);
+                        editingKey = null;
+                        addBtn.textContent = '➕ চ্যানেল যোগ';
+                        addBtn.style.background = '';
+                        channelName.value = '';
+                        channelUrl.value = '';
+                    })
+                    .catch(() => showToast('⚠️ আপডেট সমস্যা', true));
+            } else {
+                if (channels.some(c => c.url === url)) return showToast('⚠️ URL ইতিমধ্যে আছে', true);
+                db.ref('channels').push().set({ name, url })
+                    .then(() => {
+                        showToast(`✅ "${name}" যোগ হয়েছে`);
+                        channelName.value = '';
+                        channelUrl.value = '';
+                    })
+                    .catch(() => showToast('⚠️ যোগ করতে সমস্যা', true));
+            }
+        });
+
+        document.getElementById('resetDefaultBtn').addEventListener('click', function() {
+            if (!confirm('সব চ্যানেল মুছে ডিফল্ট লোড করবেন?')) return;
+            const defaults = [
+                { name: "📰 নিউজ ২৪", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                { name: "🏏 স্পোর্টস এইচডি", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                { name: "🎬 সিনেমা প্লাস", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+            ];
+            db.ref('channels').remove()
+                .then(() => Promise.all(defaults.map(ch => db.ref('channels').push().set(ch))))
+                .then(() => showToast('🔄 ডিফল্ট লোড হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const data = JSON.stringify(channels, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'channels_backup.json';
+            a.click();
+            showToast('📤 এক্সপোর্ট হয়েছে');
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile')
+        .click());
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (!Array.isArray(data) || data.length === 0) throw new Error();
+                    if (!confirm(`${data.length}টি চ্যানেল ইমপোর্ট করবে?`)) return;
+                    db.ref('channels').remove()
+                        .then(() => Promise.all(data.map(ch => db.ref('channels').push().set({ name: ch.name ||
+                                'নাম নেই', url: ch.url || '' }))))
+                        .then(() => showToast(`✅ ${data.length}টি ইমপোর্ট হয়েছে`))
+                        .catch(() => showToast('⚠️ ইমপোর্ট সমস্যা', true));
+                } catch (err) { showToast('⚠️ ভ্যালিড JSON দিন', true); }
+            };
+            reader.readAsText(file);
+            this.value = '';
+        });
+
+        // ============================================================
+        // 2. SETTINGS
+        // ============================================================
+        const siteNameInput = document.getElementById('siteNameInput');
+        const logoUrlInput = document.getElementById('logoUrlInput');
+        const previewName = document.getElementById('previewName');
+        const previewLogo = document.getElementById('previewLogo');
+        const adminTitle = document.getElementById('adminTitle');
+        const adminLogo = document.getElementById('adminLogo');
+        const loginLogo = document.getElementById('loginLogo');
+
+        function loadSettings() {
+            db.ref('settings').on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const name = data.siteName || 'VIP LIVE TV';
+                const logo = data.logoUrl || 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
+                adminTitle.textContent = name;
+                adminLogo.src = logo;
+                loginLogo.src = logo;
+                previewName.textContent = name;
+                previewLogo.src = logo;
+                siteNameInput.value = name;
+                logoUrlInput.value = logo;
+                document.title = name + ' - অ্যাডমিন';
+            });
+        }
+
+        document.getElementById('updateSiteNameBtn').addEventListener('click', function() {
+            const name = siteNameInput.value.trim();
+            if (!name) return showToast('⚠️ নাম দিন', true);
+            db.ref('settings/siteName').set(name)
+                .then(() => showToast('✅ সাইট নাম আপডেট হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        document.getElementById('updateLogoBtn').addEventListener('click', function() {
+            const url = logoUrlInput.value.trim();
+            if (!url) return showToast('⚠️ URL দিন', true);
+            db.ref('settings/logoUrl').set(url)
+                .then(() => showToast('✅ লোগো আপডেট হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        document.getElementById('changePasswordBtn').addEventListener('click', function() {
+            const newPass = document.getElementById('newPassword').value.trim();
+            const confirmPass = document.getElementById('confirmPassword').value.trim();
+            if (!newPass || newPass.length < 4) return showToast('⚠️ পাসওয়ার্ড ৪+ অক্ষর', true);
+            if (newPass !== confirmPass) return showToast('⚠️ পাসওয়ার্ড মিলছে না!', true);
+            updatePassword(newPass)
+                .then(() => {
+                    showToast('✅ পাসওয়ার্ড পরিবর্তন হয়েছে!');
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                })
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        document.getElementById('resetSettingsBtn').addEventListener('click', function() {
+            if (!confirm('ডিফল্ট সেটিংস রিসেট করবেন?')) return;
+            db.ref('settings').set({
+                siteName: 'VIP LIVE TV',
+                logoUrl: 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png'
+            }).then(() => showToast('🔄 সেটিংস রিসেট হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        // ============================================================
+        // 3. WATERMARK SYSTEM
+        // ============================================================
+        const wmEnabled = document.getElementById('wmEnabled');
+        const wmStatusLabel = document.getElementById('wmStatusLabel');
+        const wmLogoUrl = document.getElementById('wmLogoUrl');
+        const wmText = document.getElementById('wmText');
+        const wmPosition = document.getElementById('wmPosition');
+        const wmSize = document.getElementById('wmSize');
+        const wmOpacity = document.getElementById('wmOpacity');
+        const wmPreviewLogo = document.getElementById('wmPreviewLogo');
+        const wmPreviewText = document.getElementById('wmPreviewText');
+        const wmDemo = document.getElementById('wmDemo');
+
+        function loadWatermark() {
+            db.ref('watermark').on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const enabled = data.enabled || false;
+                const logo = data.logoUrl || 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png';
+                const text = data.text || 'VIP LIVE TV';
+                const position = data.position || 'bottom-right';
+                const size = data.size || 60;
+                const opacity = data.opacity || 70;
+
+                wmEnabled.checked = enabled;
+                wmStatusLabel.textContent = enabled ? 'ওয়াটারমার্ক অন' : 'ওয়াটারমার্ক অফ';
+                wmLogoUrl.value = logo;
+                wmText.value = text;
+                wmPosition.value = position;
+                wmSize.value = size;
+                wmOpacity.value = opacity;
+
+                updateWmPreview(logo, text, position, size, opacity, enabled);
+            });
+        }
+
+        function updateWmPreview(logo, text, position, size, opacity, enabled) {
+            wmPreviewLogo.src = logo;
+            wmPreviewText.textContent = text;
+
+            const posMap = {
+                'top-left': 'top:10px;left:10px;',
+                'top-center': 'top:10px;left:50%;transform:translateX(-50%);',
+                'top-right': 'top:10px;right:10px;',
+                'center': 'top:50%;left:50%;transform:translate(-50%,-50%);',
+                'bottom-left': 'bottom:10px;left:10px;',
+                'bottom-center': 'bottom:10px;left:50%;transform:translateX(-50%);',
+                'bottom-right': 'bottom:10px;right:10px;'
+            };
+
+            wmDemo.style.cssText = `
+                position:absolute;
+                ${posMap[position] || 'bottom:10px;right:10px;'}
+                display:${enabled ? 'flex' : 'none'};
+                align-items:center;
+                gap:8px;
+                padding:6px 14px;
+                background:rgba(0,0,0,0.5);
+                border-radius:8px;
+                backdrop-filter:blur(4px);
+                border:1px solid rgba(255,255,255,0.1);
+            `;
+            wmPreviewLogo.style.height = size + 'px';
+            wmPreviewLogo.style.width = 'auto';
+            wmPreviewLogo.style.borderRadius = '4px';
+            wmPreviewText.style.color = '#fff';
+            wmPreviewText.style.fontSize = Math.max(10, size * 0.3) + 'px';
+            wmPreviewText.style.fontWeight = '600';
+            wmPreviewText.style.textShadow = '0 2px 10px rgba(0,0,0,0.8)';
+            wmDemo.style.opacity = opacity / 100;
+        }
+
+        wmEnabled.addEventListener('change', function() {
+            wmStatusLabel.textContent = this.checked ? 'ওয়াটারমার্ক অন' : 'ওয়াটারমার্ক অফ';
+            updateWmPreview(
+                wmLogoUrl.value || 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png',
+                wmText.value || 'VIP LIVE TV',
+                wmPosition.value,
+                parseInt(wmSize.value) || 60,
+                parseInt(wmOpacity.value) || 70,
+                this.checked
+            );
+        });
+
+        document.getElementById('updateWmLogoBtn').addEventListener('click', function() {
+            const url = wmLogoUrl.value.trim();
+            if (!url) return showToast('⚠️ URL দিন', true);
+            updateWmPreview(
+                url,
+                wmText.value || 'VIP LIVE TV',
+                wmPosition.value,
+                parseInt(wmSize.value) || 60,
+                parseInt(wmOpacity.value) || 70,
+                wmEnabled.checked
+            );
+            showToast('✅ ওয়াটারমার্ক লোগো প্রিভিউ আপডেট হয়েছে');
+        });
+
+        document.getElementById('updateWmSettingsBtn').addEventListener('click', function() {
+            const data = {
+                enabled: wmEnabled.checked,
+                logoUrl: wmLogoUrl.value.trim() || 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png',
+                text: wmText.value.trim() || 'VIP LIVE TV',
+                position: wmPosition.value,
+                size: parseInt(wmSize.value) || 60,
+                opacity: parseInt(wmOpacity.value) || 70
+            };
+
+            db.ref('watermark').set(data)
+                .then(() => {
+                    showToast('✅ ওয়াটারমার্ক সেভ হয়েছে!');
+                    updateWmPreview(data.logoUrl, data.text, data.position, data.size, data.opacity, data.enabled);
+                })
+                .catch(() => showToast('⚠️ সেভ করতে সমস্যা', true));
+        });
+
+        document.getElementById('resetWmDefaultBtn').addEventListener('click', function() {
+            if (!confirm('ডিফল্ট ওয়াটারমার্ক সেট করবেন?')) return;
+            const defaults = {
+                enabled: true,
+                logoUrl: 'https://i.postimg.cc/pLs1d99p/Chat-GPT-Image-Jun-18-2026-07-09-53-PM.png',
+                text: 'VIP LIVE TV',
+                position: 'bottom-right',
+                size: 60,
+                opacity: 70
+            };
+            db.ref('watermark').set(defaults)
+                .then(() => {
+                    showToast('🔄 ডিফল্ট ওয়াটারমার্ক সেট হয়েছে');
+                    loadWatermark();
+                })
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        // ============================================================
+        // 4. ANALYTICS
+        // ============================================================
+        function loadAnalytics() {
+            db.ref('analytics').on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                document.getElementById('totalVisits').textContent = data.totalVisits || 0;
+                document.getElementById('onlineUsers').textContent = data.onlineUsers || 0;
+                document.getElementById('todayVisits').textContent = data.todayVisits || 0;
+                document.getElementById('totalClicks').textContent = data.totalClicks || 0;
+
+                const logs = data.logs || [];
+                const logEl = document.getElementById('visitorLog');
+                logEl.innerHTML = '';
+                if (logs.length === 0) {
+                    logEl.innerHTML =
+                        `<div style="text-align:center;color:var(--text-muted);padding:15px;">কোনো ভিজিটর লগ নেই</div>`;
+                } else {
+                    logs.slice(-20).reverse().forEach(log => {
+                        const div = document.createElement('div');
+                        div.className = 'log-item';
+                        div.innerHTML =
+                            `<span>${log.channel ? '📡 ' + log.channel : '👤 ভিজিটর'}</span><span class="time">${log.time || ''}</span>`;
+                        logEl.appendChild(div);
+                    });
+                }
+            });
+        }
+
+        document.getElementById('resetAnalyticsBtn').addEventListener('click', function() {
+            if (!confirm('সব অ্যানালাইটিক্স ডেটা মুছবেন?')) return;
+            db.ref('analytics').set({ totalVisits: 0, onlineUsers: 0, todayVisits: 0, totalClicks: 0, logs: [] })
+                .then(() => showToast('🗑️ অ্যানালাইটিক্স রিসেট হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        document.getElementById('refreshAnalyticsBtn').addEventListener('click', function() {
+            showToast('🔄 রিফ্রেশ করা হচ্ছে...');
+            loadAnalytics();
+        });
+
+        // ============================================================
+        // 5. NOTIFICATIONS
+        // ============================================================
+        const notifTitle = document.getElementById('notifTitle');
+        const notifBody = document.getElementById('notifBody');
+        const notifType = document.getElementById('notifType');
+
+        document.getElementById('sendNotifBtn').addEventListener('click', function() {
+            const title = notifTitle.value.trim();
+            const body = notifBody.value.trim();
+            if (!title || !body) return showToast('⚠️ শিরোনাম ও বার্তা দিন!', true);
+
+            const notification = {
+                title,
+                body,
+                type: notifType.value,
+                time: new Date().toLocaleString(),
+                timestamp: Date.now(),
+                read: false
+            };
+
+            db.ref('notifications').push(notification)
+                .then(() => {
+                    showToast('✅ নোটিফিকেশন পাঠানো হয়েছে!');
+                    notifTitle.value = '';
+                    notifBody.value = '';
+                })
+                .catch(() => showToast('⚠️ পাঠাতে সমস্যা', true));
+        });
+
+        document.getElementById('clearNotifBtn').addEventListener('click', function() {
+            if (!confirm('সব নোটিফিকেশন মুছবেন?')) return;
+            db.ref('notifications').remove()
+                .then(() => showToast('🗑️ সব নোটিফিকেশন মুছে ফেলা হয়েছে'))
+                .catch(() => showToast('⚠️ সমস্যা হয়েছে', true));
+        });
+
+        function loadNotifications() {
+            db.ref('notifications').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const listEl = document.getElementById('notificationList');
+                listEl.innerHTML = '';
+                if (!data) {
+                    listEl.innerHTML =
+                        `<div style="text-align:center;color:var(--text-muted);padding:20px;">কোনো নোটিফিকেশন নেই</div>`;
+                    return;
+                }
+                const notifs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                notifs.reverse().forEach(n => {
+                    const div = document.createElement('div');
+                    div.className = 'notification-item';
+                    const emoji = { info: 'ℹ️', success: '✅', warning: '⚠️', danger: '🔴' } [n.type] || 'ℹ️';
+                    div.innerHTML = `
+                        <div class="ntitle">${emoji} ${n.title}</div>
+                        <div class="nbody">${n.body}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                            <span class="ntime">${n.time || ''}</span>
+                            <span class="nstatus">${n.read ? 'পড়া হয়েছে' : 'পাঠানো হয়েছে'}</span>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            });
+        }
+
+        // ============================================================
+        // LOAD ALL DATA
+        // ============================================================
+        let isDataLoaded = false;
+
+        function loadAllData() {
+            if (isDataLoaded) return;
+            isDataLoaded = true;
+            loadChannels();
+            loadSettings();
+            loadWatermark();
+            loadAnalytics();
+            loadNotifications();
+            console.log('✅ অ্যাডমিন প্যানেল লোড হয়েছে');
+        }
+
+        // ============================================================
+        // START
+        // ============================================================
+        loadTheme();
+        initPassword();
+        checkSession();
+    </script>
+
 </body>
 </html>
